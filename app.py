@@ -152,11 +152,11 @@ with k1:
                 Total Records
             </div>
 
-            <h1 style="
+            <h1 style='
                 color:white;
                 margin-top:15px;
                 font-size:42px;
-            ">
+            '>
                 {len(data)}
             </h1>
         </div>
@@ -173,11 +173,11 @@ with k2:
                 Total Columns
             </div>
 
-            <h1 style="
+            <h1 style='
                 color:white;
                 margin-top:15px;
                 font-size:42px;
-            ">
+            '>
                 {len(data.columns)}
             </h1>
         </div>
@@ -194,11 +194,11 @@ with k3:
                 System Status
             </div>
 
-            <h1 style="
+            <h1 style='
                 color:#22c55e;
                 margin-top:15px;
                 font-size:42px;
-            ">
+            '>
                 Active
             </h1>
         </div>
