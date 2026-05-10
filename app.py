@@ -617,13 +617,13 @@ elif section == "Geo Analytics":
         color="Demand",
         hover_name="City",
         hover_data=["Demand"],
-        zoom=3.8,
-        height=600,
+        zoom=4.5,
+        height=750,
         title="Supply Chain Demand Across India"
     )
 
     fig_map.update_layout(
-        mapbox_style="carto-darkmatter"
+        mapbox_style="open-street-map"
     )
 
     st.plotly_chart(
