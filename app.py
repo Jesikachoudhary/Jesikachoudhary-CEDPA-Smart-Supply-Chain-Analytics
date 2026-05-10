@@ -479,24 +479,15 @@ elif section == "Demand Forecasting":
         fig_forecast,
         use_container_width=True
     )
-
-# =====================================================
-# GEO ANALYTICS V2
-# =====================================================
-
 # =====================================================
 # GEO ANALYTICS V3
 # =====================================================
 
 elif section == "Geo Analytics":
-    top_regions = sorted_geo.reset_index(drop=True)
+
     st.subheader(
         "🌍 Real-Time Global Geo Analytics"
     )
-
-    # --------------------------------
-    # Geo Dataset
-    # --------------------------------
 
     geo_data = pd.DataFrame({
 
@@ -591,52 +582,37 @@ elif section == "Geo Analytics":
         ]
     })
 
-    # --------------------------------
-    # KPI Cards
-    # --------------------------------
-
     st.subheader("📊 Geo Analytics KPIs")
 
-    k1, k2, k3 = st.columns(3)
+    g1, g2, g3 = st.columns(3)
 
-    with k1:
+    with g1:
         st.metric(
             "Locations",
             len(geo_data)
         )
 
-    with k2:
+    with g2:
         st.metric(
             "Total Demand",
             f"{geo_data['Demand'].sum():,}"
         )
 
-    with k3:
+    with g3:
         st.metric(
             "Average Demand",
             f"{geo_data['Demand'].mean():.0f}"
         )
-
-    # --------------------------------
-    # Create REAL Interactive Map
-    # --------------------------------
 
     st.subheader(
         "🗺️ Interactive Logistics Map"
     )
 
     m = folium.Map(
-
         location=[20, 0],
-
         zoom_start=2,
-
         tiles="OpenStreetMap"
     )
-
-    # --------------------------------
-    # Add Heatmap Layer
-    # --------------------------------
 
     heat_data = [
 
@@ -646,17 +622,13 @@ elif section == "Geo Analytics":
             row["Demand"]
         ]
 
-        for index, row in geo_data.iterrows()
+        for _, row in geo_data.iterrows()
     ]
 
     HeatMap(
         heat_data,
         radius=25
     ).add_to(m)
-
-    # --------------------------------
-    # Add City Markers
-    # --------------------------------
 
     for _, row in geo_data.iterrows():
 
@@ -687,19 +659,11 @@ elif section == "Geo Analytics":
 
         ).add_to(m)
 
-    # --------------------------------
-    # Render Map
-    # --------------------------------
-
     st_folium(
         m,
         width=1400,
         height=750
     )
-
-    # --------------------------------
-    # Demand Table
-    # --------------------------------
 
     st.subheader(
         "📋 Demand Analytics Table"
@@ -710,14 +674,15 @@ elif section == "Geo Analytics":
         ascending=False
     )
 
+    top_regions = sorted_geo.reset_index(drop=True)
+
+    highest_city = top_regions.iloc[0]
+    lowest_city = top_regions.iloc[-1]
+
     st.dataframe(
-        sorted_geo,
+        top_regions,
         use_container_width=True
     )
-
-    # --------------------------------
-    # Demand Chart
-    # --------------------------------
 
     st.subheader(
         "📈 Demand Comparison"
@@ -725,7 +690,7 @@ elif section == "Geo Analytics":
 
     fig_geo = px.bar(
 
-        sorted_geo,
+        top_regions,
 
         x="City",
 
@@ -744,16 +709,10 @@ elif section == "Geo Analytics":
         fig_geo,
         use_container_width=True
     )
- 
-
-    top_regions = sorted_geo.reset_index(drop=True)
 
     st.subheader(
-    "🤖 AI Generated Geo Insights"
-)
-
-    highest_city = top_regions.iloc[0]
-    lowest_city = top_regions.iloc[-1]
+        "🤖 AI Generated Geo Insights"
+    )
 
     st.success(
         f"""
@@ -789,6 +748,7 @@ elif section == "Geo Analytics":
         file_name="geo_analytics_report.csv",
         mime="text/csv"
     )
+
 # =====================================================
 # AI INSIGHTS
 # =====================================================
@@ -829,10 +789,6 @@ elif section == "AI Insights":
         ]
     )
 
-    # --------------------------------
-    # KPI CARDS
-    # --------------------------------
-
     k1, k2, k3, k4 = st.columns(4)
 
     with k1:
@@ -859,10 +815,6 @@ elif section == "AI Insights":
             backlog_products
         )
 
-    # --------------------------------
-    # AI RECOMMENDATIONS
-    # --------------------------------
-
     st.subheader(
         "🧠 Smart Recommendations"
     )
@@ -871,9 +823,7 @@ elif section == "AI Insights":
 
         st.warning(
             """
-            ⚠️ Inventory levels are below
-            recommended thresholds.
-            Consider increasing warehouse stock.
+            ⚠️ Inventory levels are below recommended thresholds.
             """
         )
 
@@ -881,8 +831,7 @@ elif section == "AI Insights":
 
         st.success(
             """
-            ✅ Inventory levels appear stable
-            across supply chain operations.
+            ✅ Inventory levels appear stable.
             """
         )
 
@@ -891,7 +840,6 @@ elif section == "AI Insights":
         st.error(
             """
             🚚 Lead time is significantly high.
-            Supplier optimization is recommended.
             """
         )
 
@@ -899,33 +847,9 @@ elif section == "AI Insights":
 
         st.info(
             """
-            🚀 Lead time performance is operating
-            within safe logistics range.
+            🚀 Lead time performance is operating normally.
             """
         )
-
-    if high_risk_products > 0:
-
-        st.error(
-            f"""
-            ⚠️ {high_risk_products}
-            high-risk products detected.
-            Immediate replenishment recommended.
-            """
-        )
-
-    else:
-
-        st.success(
-            """
-            ✅ No critical supply chain risks
-            detected currently.
-            """
-        )
-
-    # --------------------------------
-    # DEMAND TREND ANALYSIS
-    # --------------------------------
 
     st.subheader(
         "📈 AI Demand Trend Analysis"
@@ -940,22 +864,12 @@ elif section == "AI Insights":
     lowest_month = monthly_demand.idxmin()
 
     st.success(
-        f"""
-        📊 Highest demand observed during
-        {top_month.upper()}.
-        """
+        f"📊 Highest demand observed during {top_month.upper()}"
     )
 
     st.warning(
-        f"""
-        📉 Lowest demand observed during
-        {lowest_month.upper()}.
-        """
+        f"📉 Lowest demand observed during {lowest_month.upper()}"
     )
-
-    # --------------------------------
-    # AI SUMMARY
-    # --------------------------------
 
     st.subheader(
         "📋 Executive AI Summary"
@@ -963,12 +877,6 @@ elif section == "AI Insights":
 
     st.info(
         f"""
-        The AI engine analyzed supply chain
-        operations across inventory,
-        demand forecasting,
-        logistics efficiency,
-        and backlog risk.
-
         Total demand processed:
         {int(total_demand):,} units.
 
@@ -977,13 +885,9 @@ elif section == "AI Insights":
 
         Current logistics lead time:
         {avg_lead_time:.2f} days.
-
-        The platform recommends
-        continuous monitoring of
-        high-demand periods and
-        proactive inventory optimization.
         """
     )
+
 # =====================================================
 # FOOTER
 # =====================================================
