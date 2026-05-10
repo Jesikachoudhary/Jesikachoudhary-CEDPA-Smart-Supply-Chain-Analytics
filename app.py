@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 from app.ml_models.risk_prediction import train_risk_model
 
@@ -181,6 +182,52 @@ if section == "Dashboard Overview":
 
     st.write(data.columns.tolist())
 
+    # --------------------------------
+    # Executive Insights
+    # --------------------------------
+
+    st.subheader("📊 Executive Business Insights")
+
+    monthly_columns = [
+        "jan", "feb", "mar", "apr", "may", "jun",
+        "jul", "aug", "sep", "oct", "nov", "dec"
+    ]
+
+    monthly_totals = data[monthly_columns].sum()
+
+    top_month = monthly_totals.idxmax()
+
+    top_value = monthly_totals.max()
+
+    avg_lead_time = data["lead-time"].mean()
+
+    low_stock = data[data["quantity_on_hand"] < 1000]
+
+    high_backlog = data[data["backlog"] > 0]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.info(
+            f"📈 Highest Demand Month: {top_month.upper()} "
+            f"({top_value:.0f} units)"
+        )
+
+        st.warning(
+            f"⚠️ Low Stock Products: {len(low_stock)}"
+        )
+
+    with col2:
+
+        st.success(
+            f"🚚 Average Lead Time: {avg_lead_time:.2f} days"
+        )
+
+        st.error(
+            f"📦 Products With Backlog: {len(high_backlog)}"
+        )
+
 # --------------------------------
 # AI Risk Prediction
 # --------------------------------
@@ -212,7 +259,9 @@ elif section == "AI Risk Prediction":
 
     st.plotly_chart(fig_risk, use_container_width=True)
 
+    # --------------------------------
     # Feature Importance
+    # --------------------------------
 
     st.subheader("📊 Feature Importance Analysis")
 
@@ -241,6 +290,57 @@ elif section == "AI Risk Prediction":
     )
 
     st.plotly_chart(fig_importance, use_container_width=True)
+
+    # --------------------------------
+    # User Prediction
+    # --------------------------------
+
+    st.subheader("🔮 Predict Supply Chain Risk")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        jan = st.number_input("January Demand", value=2000)
+        feb = st.number_input("February Demand", value=1800)
+        mar = st.number_input("March Demand", value=2200)
+        apr = st.number_input("April Demand", value=2100)
+        may = st.number_input("May Demand", value=1900)
+        jun = st.number_input("June Demand", value=2300)
+
+    with col2:
+        jul = st.number_input("July Demand", value=2400)
+        aug = st.number_input("August Demand", value=2500)
+        sep = st.number_input("September Demand", value=2100)
+        octo = st.number_input("October Demand", value=2600)
+        nov = st.number_input("November Demand", value=2700)
+        dec = st.number_input("December Demand", value=3000)
+
+    lead_time = st.number_input("Lead Time", value=5)
+
+    quantity_on_hand = st.number_input(
+        "Quantity On Hand",
+        value=500
+    )
+
+    backlog = st.number_input("Backlog", value=1)
+
+    if st.button("Predict Risk"):
+
+        input_data = [[
+            jan, feb, mar, apr, may, jun,
+            jul, aug, sep, octo, nov, dec,
+            lead_time,
+            quantity_on_hand,
+            backlog
+        ]]
+
+        prediction = model.predict(np.array(input_data))
+
+        if prediction[0] == 1:
+            st.error("⚠️ High Supply Chain Risk Detected")
+
+        else:
+            st.success("✅ Low Supply Chain Risk")
 
 # --------------------------------
 # Demand Analysis
@@ -271,6 +371,31 @@ elif section == "Demand Analysis":
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # --------------------------------
+    # Correlation Heatmap
+    # --------------------------------
+
+    st.subheader("🔥 Correlation Heatmap")
+
+    numeric_data = data.select_dtypes(
+        include=["int64", "float64"]
+    )
+
+    corr_matrix = numeric_data.corr()
+
+    fig_heatmap = px.imshow(
+        corr_matrix,
+        text_auto=True,
+        aspect="auto",
+        color_continuous_scale="Blues",
+        title="Feature Correlation Heatmap"
+    )
+
+    st.plotly_chart(
+        fig_heatmap,
+        use_container_width=True
+    )
 
 # --------------------------------
 # Inventory Insights
@@ -340,7 +465,89 @@ elif section == "Demand Forecasting":
 
     st.subheader("📋 Forecast Data")
 
-    st.dataframe(forecast_df, use_container_width=True)
+    st.dataframe(
+        forecast_df,
+        use_container_width=True
+    )
+
+    # --------------------------------
+    # Manual Forecast Prediction
+    # --------------------------------
+
+    st.subheader("🔮 Manual Demand Forecast Prediction")
+
+    user_demand = st.number_input(
+        "Enter Current Average Demand",
+        value=2000
+    )
+
+    forecast_value = (
+        forecast_df["Forecast"].mean()
+        + (user_demand * 0.05)
+    )
+
+    st.metric(
+        "Predicted Future Demand",
+        f"{forecast_value:.2f}"
+    )
+
+        # --------------------------------
+    # ML Forecast Prediction
+    # --------------------------------
+
+    st.subheader("🤖 AI Demand Forecasting")
+
+    month_numbers = np.array(
+        range(1, 13)
+    ).reshape(-1, 1)
+
+    demand_values = monthly_avg.values
+
+    forecast_model = LinearRegression()
+
+    forecast_model.fit(
+        month_numbers,
+        demand_values
+    )
+
+    future_month = st.slider(
+        "Select Future Month",
+        13,
+        24,
+        15
+    )
+
+    future_prediction = forecast_model.predict(
+        [[future_month]]
+    )[0]
+
+    st.success(
+        f"Predicted Demand for Month "
+        f"{future_month}: "
+        f"{future_prediction:.2f}"
+    )
+
+    future_df = pd.DataFrame({
+        "Month": list(range(1, 13)) + [future_month],
+        "Demand": list(demand_values) + [future_prediction]
+    })
+
+    fig_future = px.line(
+        future_df,
+        x="Month",
+        y="Demand",
+        markers=True,
+        title="AI Forecasted Demand Trend"
+    )
+
+    st.plotly_chart(
+        fig_future,
+        use_container_width=True
+    )
+
+    # --------------------------------
+    # Download Forecast Report
+    # --------------------------------
 
     csv = forecast_df.to_csv(index=False)
 
