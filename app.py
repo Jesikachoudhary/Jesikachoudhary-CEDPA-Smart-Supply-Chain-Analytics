@@ -223,30 +223,27 @@ elif section == "AI Risk Prediction":
         f"Model Accuracy: {accuracy:.2f}"
     )
 
-    risk_counts = data[
-        "risk_level"
-    ].value_counts()
+    if "risk_level" in data.columns:
 
-    risk_df = pd.DataFrame({
-        "Risk": [
-            "Low Risk",
-            "High Risk"
-        ],
-        "Count": risk_counts.values
-    })
+        risk_counts = data["risk_level"].value_counts()
 
-    fig_risk = px.pie(
-        risk_df,
-        names="Risk",
-        values="Count",
-        hole=0.5,
-        title="Supply Chain Risk Distribution"
-    )
+        risk_df = pd.DataFrame({
+            "Risk": risk_counts.index,
+            "Count": risk_counts.values
+        })
 
-    st.plotly_chart(
-        fig_risk,
-        use_container_width=True
-    )
+        fig_risk = px.pie(
+            risk_df,
+            names="Risk",
+            values="Count",
+            hole=0.5,
+            title="Supply Chain Risk Distribution"
+        )
+
+        st.plotly_chart(
+            fig_risk,
+            use_container_width=True
+        )
 
     st.subheader(
         "🔮 Predict Supply Chain Risk"
@@ -480,13 +477,13 @@ elif section == "Demand Forecasting":
     )
 
 # =====================================================
-# GEO ANALYTICS
+# GEO ANALYTICS V2
 # =====================================================
 
 elif section == "Geo Analytics":
 
     st.subheader(
-        "🌍 Global Supply Chain Geo Analytics"
+        "🌍 Global Supply Chain Geo Analytics V2"
     )
 
     geo_data = pd.DataFrame({
@@ -494,135 +491,545 @@ elif section == "Geo Analytics":
         "City": [
             "New York",
             "Los Angeles",
+            "Chicago",
+            "Houston",
+            "Toronto",
             "London",
+            "Paris",
             "Berlin",
             "Dubai",
             "Mumbai",
             "New Delhi",
             "Singapore",
+            "Tokyo",
             "Shanghai",
             "Sydney",
             "São Paulo",
-            "Johannesburg"
+            "Johannesburg",
+            "Bangkok",
+            "Seoul",
+            "Mexico City"
         ],
 
         "Country": [
             "USA",
             "USA",
+            "USA",
+            "USA",
+            "Canada",
             "UK",
+            "France",
             "Germany",
             "UAE",
             "India",
             "India",
             "Singapore",
+            "Japan",
             "China",
             "Australia",
             "Brazil",
-            "South Africa"
+            "South Africa",
+            "Thailand",
+            "South Korea",
+            "Mexico"
         ],
 
         "Latitude": [
             40.7128,
             34.0522,
+            41.8781,
+            29.7604,
+            43.6532,
             51.5074,
+            48.8566,
             52.5200,
             25.2048,
             19.0760,
             28.6139,
             1.3521,
+            35.6762,
             31.2304,
             -33.8688,
             -23.5505,
-            -26.2041
+            -26.2041,
+            13.7563,
+            37.5665,
+            19.4326
         ],
 
         "Longitude": [
             -74.0060,
             -118.2437,
+            -87.6298,
+            -95.3698,
+            -79.3832,
             -0.1278,
+            2.3522,
             13.4050,
             55.2708,
             72.8777,
             77.2090,
             103.8198,
+            139.6503,
             121.4737,
             151.2093,
             -46.6333,
-            28.0473
+            28.0473,
+            100.5018,
+            126.9780,
+            -99.1332
         ],
 
         "Demand": [
-            12500,
-            8200,
-            11400,
-            6800,
-            9600,
-            16200,
-            18700,
+            15000,
+            12000,
+            9800,
+            8500,
+            7200,
             13200,
-            20100,
+            10400,
             9100,
-            7800,
-            2700
+            14200,
+            21000,
+            23500,
+            14800,
+            18200,
+            22500,
+            9600,
+            12000,
+            4300,
+            11100,
+            15400,
+            12400
         ]
     })
 
+    st.subheader("📊 Global Geo KPIs")
+
+    g1, g2, g3, g4 = st.columns(4)
+
+    with g1:
+        st.metric(
+            "Locations",
+            len(geo_data)
+        )
+
+    with g2:
+        st.metric(
+            "Total Demand",
+            f"{geo_data['Demand'].sum():,}"
+        )
+
+    with g3:
+        st.metric(
+            "High Demand Regions",
+            len(
+                geo_data[
+                    geo_data["Demand"] > 15000
+                ]
+            )
+        )
+
+    with g4:
+        st.metric(
+            "Average Demand",
+            f"{geo_data['Demand'].mean():.0f}"
+        )
+
     st.subheader(
-        "🗺️ Interactive Supply Chain Demand Map"
+        "🌎 Geo Analytics Filters"
     )
 
-    fig_map = px.scatter_mapbox(
+    country_filter = st.multiselect(
+        "Select Countries",
+        options=geo_data["Country"].unique(),
+        default=geo_data["Country"].unique()
+    )
 
-        geo_data,
+    demand_filter = st.slider(
+        "Minimum Demand",
+        min_value=0,
+        max_value=int(
+            geo_data["Demand"].max()
+        ),
+        value=5000
+    )
 
+    filtered_geo = geo_data[
+        (geo_data["Country"].isin(country_filter))
+        &
+        (geo_data["Demand"] >= demand_filter)
+    ]
+
+    st.subheader(
+        "🔥 Global Demand Density Heatmap"
+    )
+
+    density_map = px.density_mapbox(
+        filtered_geo,
         lat="Latitude",
-
         lon="Longitude",
-
-        hover_name="City",
-
-        hover_data={
-            "Country": True,
-            "Demand": True
-        },
-
-        size="Demand",
-
-        color="Demand",
-
-        color_continuous_scale="Turbo",
-
-        zoom=1.2,
-
-        height=750
+        z="Demand",
+        radius=35,
+        zoom=1.3,
+        center=dict(
+            lat=20,
+            lon=0
+        ),
+        height=750,
+        mapbox_style="carto-positron",
+        color_continuous_scale="Turbo"
     )
 
-    fig_map.update_layout(
-
-        mapbox_style="open-street-map",
-
+    density_map.update_layout(
         margin=dict(
             l=0,
             r=0,
-            t=50,
+            t=40,
             b=0
         )
     )
 
     st.plotly_chart(
-        fig_map,
+        density_map,
         use_container_width=True
     )
 
     st.subheader(
-        "📋 Location Demand Details"
+        "📍 Interactive Logistics Demand Map"
     )
 
-    st.dataframe(
-        geo_data,
+    city_map = px.scatter_mapbox(
+        filtered_geo,
+        lat="Latitude",
+        lon="Longitude",
+        hover_name="City",
+        hover_data={
+            "Country": True,
+            "Demand": True
+        },
+        size="Demand",
+        color="Demand",
+        size_max=35,
+        zoom=1.3,
+        height=800,
+        width=None,
+        color_continuous_scale="Turbo"
+    )
+
+    city_map.update_layout(
+        mapbox_style="open-street-map",
+        margin=dict(
+            l=0,
+            r=0,
+            t=40,
+            b=0
+        )
+    )
+
+    st.plotly_chart(
+        city_map,
         use_container_width=True
     )
 
+    st.subheader(
+        "🏆 Highest Demand Regions"
+    )
+
+    top_regions = filtered_geo.sort_values(
+        by="Demand",
+        ascending=False
+    )
+
+    top_regions = top_regions.reset_index(
+        drop=True
+    )
+
+    st.dataframe(
+        top_regions,
+        use_container_width=True
+    )
+
+    st.subheader(
+        "📈 Global Demand Comparison"
+    )
+
+    demand_chart = px.bar(
+        top_regions,
+        x="City",
+        y="Demand",
+        color="Demand",
+        text="Demand",
+        color_continuous_scale="Turbo",
+        title="Demand Distribution Across Global Cities"
+    )
+
+    demand_chart.update_layout(
+        height=600
+    )
+
+    st.plotly_chart(
+        demand_chart,
+        use_container_width=True
+    )
+
+    st.subheader(
+        "🌐 Country-Wise Demand Analysis"
+    )
+
+    country_analysis = filtered_geo.groupby(
+        "Country"
+    )["Demand"].sum().reset_index()
+
+    country_chart = px.pie(
+        country_analysis,
+        names="Country",
+        values="Demand",
+        hole=0.45,
+        title="Country Wise Demand Share"
+    )
+
+    st.plotly_chart(
+        country_chart,
+        use_container_width=True
+    )
+
+    st.subheader(
+        "🤖 AI Generated Geo Insights"
+    )
+
+    highest_city = top_regions.iloc[0]
+    lowest_city = top_regions.iloc[-1]
+
+    st.success(
+        f"""
+        🚀 Highest global demand detected in
+        {highest_city['City']},
+        {highest_city['Country']}
+        with total demand of
+        {highest_city['Demand']:,} units.
+        """
+    )
+
+    st.warning(
+        f"""
+        ⚠️ Lowest demand observed in
+        {lowest_city['City']},
+        {lowest_city['Country']}
+        with only
+        {lowest_city['Demand']:,} units.
+        """
+    )
+
+    st.subheader(
+        "📥 Export Geo Analytics Report"
+    )
+
+    geo_csv = top_regions.to_csv(
+        index=False
+    )
+
+    st.download_button(
+        label="Download Geo Analytics CSV",
+        data=geo_csv,
+        file_name="geo_analytics_report.csv",
+        mime="text/csv"
+    )
+# =====================================================
+# AI INSIGHTS
+# =====================================================
+
+elif section == "AI Insights":
+
+    st.subheader(
+        "🤖 AI Powered Business Insights"
+    )
+
+    monthly_columns = [
+        "jan", "feb", "mar", "apr",
+        "may", "jun", "jul", "aug",
+        "sep", "oct", "nov", "dec"
+    ]
+
+    total_demand = data[
+        monthly_columns
+    ].sum().sum()
+
+    avg_inventory = data[
+        "quantity_on_hand"
+    ].mean()
+
+    avg_lead_time = data[
+        "lead-time"
+    ].mean()
+
+    backlog_products = len(
+        data[data["backlog"] > 0]
+    )
+
+    high_risk_products = len(
+        data[
+            (data["quantity_on_hand"] < 1000)
+            &
+            (data["backlog"] > 0)
+        ]
+    )
+
+    # --------------------------------
+    # KPI CARDS
+    # --------------------------------
+
+    k1, k2, k3, k4 = st.columns(4)
+
+    with k1:
+        st.metric(
+            "Total Demand",
+            f"{int(total_demand):,}"
+        )
+
+    with k2:
+        st.metric(
+            "Average Inventory",
+            f"{avg_inventory:.0f}"
+        )
+
+    with k3:
+        st.metric(
+            "Average Lead Time",
+            f"{avg_lead_time:.2f}"
+        )
+
+    with k4:
+        st.metric(
+            "Backlog Products",
+            backlog_products
+        )
+
+    # --------------------------------
+    # AI RECOMMENDATIONS
+    # --------------------------------
+
+    st.subheader(
+        "🧠 Smart Recommendations"
+    )
+
+    if avg_inventory < 2000:
+
+        st.warning(
+            """
+            ⚠️ Inventory levels are below
+            recommended thresholds.
+            Consider increasing warehouse stock.
+            """
+        )
+
+    else:
+
+        st.success(
+            """
+            ✅ Inventory levels appear stable
+            across supply chain operations.
+            """
+        )
+
+    if avg_lead_time > 10:
+
+        st.error(
+            """
+            🚚 Lead time is significantly high.
+            Supplier optimization is recommended.
+            """
+        )
+
+    else:
+
+        st.info(
+            """
+            🚀 Lead time performance is operating
+            within safe logistics range.
+            """
+        )
+
+    if high_risk_products > 0:
+
+        st.error(
+            f"""
+            ⚠️ {high_risk_products}
+            high-risk products detected.
+            Immediate replenishment recommended.
+            """
+        )
+
+    else:
+
+        st.success(
+            """
+            ✅ No critical supply chain risks
+            detected currently.
+            """
+        )
+
+    # --------------------------------
+    # DEMAND TREND ANALYSIS
+    # --------------------------------
+
+    st.subheader(
+        "📈 AI Demand Trend Analysis"
+    )
+
+    monthly_demand = data[
+        monthly_columns
+    ].sum()
+
+    top_month = monthly_demand.idxmax()
+
+    lowest_month = monthly_demand.idxmin()
+
+    st.success(
+        f"""
+        📊 Highest demand observed during
+        {top_month.upper()}.
+        """
+    )
+
+    st.warning(
+        f"""
+        📉 Lowest demand observed during
+        {lowest_month.upper()}.
+        """
+    )
+
+    # --------------------------------
+    # AI SUMMARY
+    # --------------------------------
+
+    st.subheader(
+        "📋 Executive AI Summary"
+    )
+
+    st.info(
+        f"""
+        The AI engine analyzed supply chain
+        operations across inventory,
+        demand forecasting,
+        logistics efficiency,
+        and backlog risk.
+
+        Total demand processed:
+        {int(total_demand):,} units.
+
+        Average inventory:
+        {avg_inventory:.0f} units.
+
+        Current logistics lead time:
+        {avg_lead_time:.2f} days.
+
+        The platform recommends
+        continuous monitoring of
+        high-demand periods and
+        proactive inventory optimization.
+        """
+    )
 # =====================================================
 # FOOTER
 # =====================================================
