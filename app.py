@@ -149,12 +149,16 @@ with k1:
         f"""
         <div class="metric-card">
             <div class="metric-title">
-            Total Records
+                Total Records
             </div>
 
-            <div class="metric-value">
-            {len(data)}
-            </div>
+            <h1 style="
+                color:white;
+                margin-top:15px;
+                font-size:42px;
+            ">
+                {len(data)}
+            </h1>
         </div>
         """,
         unsafe_allow_html=True
@@ -166,12 +170,16 @@ with k2:
         f"""
         <div class="metric-card">
             <div class="metric-title">
-            Total Columns
+                Total Columns
             </div>
 
-            <div class="metric-value">
-            {len(data.columns)}
-            </div>
+            <h1 style="
+                color:white;
+                margin-top:15px;
+                font-size:42px;
+            ">
+                {len(data.columns)}
+            </h1>
         </div>
         """,
         unsafe_allow_html=True
@@ -183,12 +191,16 @@ with k3:
         """
         <div class="metric-card">
             <div class="metric-title">
-            System Status
+                System Status
             </div>
 
-            <div class="metric-value">
-            Active
-            </div>
+            <h1 style="
+                color:#22c55e;
+                margin-top:15px;
+                font-size:42px;
+            ">
+                Active
+            </h1>
         </div>
         """,
         unsafe_allow_html=True
