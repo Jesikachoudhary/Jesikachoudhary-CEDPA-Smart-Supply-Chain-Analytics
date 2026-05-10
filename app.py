@@ -138,73 +138,28 @@ else:
 # =====================================================
 # KPI SECTION
 # =====================================================
-
 st.subheader("📈 Business KPI Dashboard")
 
 k1, k2, k3 = st.columns(3)
 
 with k1:
-
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-title">
-                Total Records
-            </div>
-
-            <h1 style='
-                color:white;
-                margin-top:15px;
-                font-size:42px;
-            '>
-                {len(data)}
-            </h1>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.metric(
+        label="Total Records",
+        value=len(data)
     )
 
 with k2:
-
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-title">
-                Total Columns
-            </div>
-
-            <h1 style='
-                color:white;
-                margin-top:15px;
-                font-size:42px;
-            '>
-                {len(data.columns)}
-            </h1>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.metric(
+        label="Total Columns",
+        value=len(data.columns)
     )
 
 with k3:
-
-    st.markdown(
-        """
-        <div class="metric-card">
-            <div class="metric-title">
-                System Status
-            </div>
-
-            <h1 style='
-                color:#22c55e;
-                margin-top:15px;
-                font-size:42px;
-            '>
-                Active
-            </h1>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.metric(
+        label="System Status",
+        value="Active"
     )
+
 
 # =====================================================
 # DASHBOARD OVERVIEW
