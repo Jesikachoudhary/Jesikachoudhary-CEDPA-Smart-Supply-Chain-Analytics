@@ -132,36 +132,36 @@ elif section == "AI Risk Prediction":
     st.plotly_chart(fig_risk, use_container_width=True)
 
     # --------------------------------
-# Feature Importance
-# --------------------------------
+    # Feature Importance
+    # --------------------------------
 
-st.subheader("Feature Importance Analysis")
+    st.subheader("Feature Importance Analysis")
 
-importance_df = pd.DataFrame({
-    "Feature": [
-        "jan", "feb", "mar", "apr", "may", "jun",
-        "jul", "aug", "sep", "oct", "nov", "dec",
-        "lead-time",
-        "quantity_on_hand",
-        "backlog"
-    ],
-    "Importance": model.feature_importances_
-})
+    importance_df = pd.DataFrame({
+        "Feature": [
+            "jan", "feb", "mar", "apr", "may", "jun",
+            "jul", "aug", "sep", "oct", "nov", "dec",
+            "lead-time",
+            "quantity_on_hand",
+            "backlog"
+        ],
+        "Importance": model.feature_importances_
+    })
 
-importance_df = importance_df.sort_values(
-    by="Importance",
-    ascending=False
-)
+    importance_df = importance_df.sort_values(
+        by="Importance",
+        ascending=False
+    )
 
-fig_importance = px.bar(
-    importance_df,
-    x="Importance",
-    y="Feature",
-    orientation="h",
-    title="ML Feature Importance"
-)
+    fig_importance = px.bar(
+        importance_df,
+        x="Importance",
+        y="Feature",
+        orientation="h",
+        title="ML Feature Importance"
+    )
 
-st.plotly_chart(fig_importance, use_container_width=True)
+    st.plotly_chart(fig_importance, use_container_width=True)
 
     # --------------------------------
     # User Prediction
@@ -318,15 +318,15 @@ elif section == "Demand Forecasting":
 
     st.dataframe(forecast_df)
 
-# --------------------------------
-# Download Forecast Report
-# --------------------------------
+    # --------------------------------
+    # Download Forecast Report
+    # --------------------------------
 
-csv = forecast_df.to_csv(index=False)
+    csv = forecast_df.to_csv(index=False)
 
-st.download_button(
-    label="Download Forecast Report",
-    data=csv,
-    file_name="forecast_report.csv",
-    mime="text/csv"
-)
+    st.download_button(
+        label="Download Forecast Report",
+        data=csv,
+        file_name="forecast_report.csv",
+        mime="text/csv"
+    )
