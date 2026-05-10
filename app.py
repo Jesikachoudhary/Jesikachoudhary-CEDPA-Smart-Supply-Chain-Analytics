@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
+import folium
+from streamlit_folium import st_folium
+from folium.plugins import HeatMap
 
 from sklearn.linear_model import LinearRegression
 from app.ml_models.risk_prediction import train_risk_model
@@ -108,7 +111,8 @@ section = st.sidebar.radio(
         "Demand Analysis",
         "Inventory Insights",
         "Demand Forecasting",
-        "Geo Analytics"
+        "Geo Analytics",
+        "AI Insights"
     ]
 )
 
@@ -480,11 +484,19 @@ elif section == "Demand Forecasting":
 # GEO ANALYTICS V2
 # =====================================================
 
-elif section == "Geo Analytics":
+# =====================================================
+# GEO ANALYTICS V3
+# =====================================================
 
+elif section == "Geo Analytics":
+    top_regions = sorted_geo.reset_index(drop=True)
     st.subheader(
-        "🌍 Global Supply Chain Geo Analytics V2"
+        "🌍 Real-Time Global Geo Analytics"
     )
+
+    # --------------------------------
+    # Geo Dataset
+    # --------------------------------
 
     geo_data = pd.DataFrame({
 
@@ -492,311 +504,253 @@ elif section == "Geo Analytics":
             "New York",
             "Los Angeles",
             "Chicago",
-            "Houston",
-            "Toronto",
             "London",
             "Paris",
             "Berlin",
             "Dubai",
             "Mumbai",
             "New Delhi",
+            "Bangalore",
             "Singapore",
             "Tokyo",
             "Shanghai",
             "Sydney",
-            "São Paulo",
-            "Johannesburg",
-            "Bangkok",
-            "Seoul",
-            "Mexico City"
+            "São Paulo"
         ],
 
         "Country": [
             "USA",
             "USA",
             "USA",
-            "USA",
-            "Canada",
             "UK",
             "France",
             "Germany",
             "UAE",
             "India",
             "India",
+            "India",
             "Singapore",
             "Japan",
             "China",
             "Australia",
-            "Brazil",
-            "South Africa",
-            "Thailand",
-            "South Korea",
-            "Mexico"
+            "Brazil"
         ],
 
         "Latitude": [
             40.7128,
             34.0522,
             41.8781,
-            29.7604,
-            43.6532,
             51.5074,
             48.8566,
             52.5200,
             25.2048,
             19.0760,
             28.6139,
+            12.9716,
             1.3521,
             35.6762,
             31.2304,
             -33.8688,
-            -23.5505,
-            -26.2041,
-            13.7563,
-            37.5665,
-            19.4326
+            -23.5505
         ],
 
         "Longitude": [
             -74.0060,
             -118.2437,
             -87.6298,
-            -95.3698,
-            -79.3832,
             -0.1278,
             2.3522,
             13.4050,
             55.2708,
             72.8777,
             77.2090,
+            77.5946,
             103.8198,
             139.6503,
             121.4737,
             151.2093,
-            -46.6333,
-            28.0473,
-            100.5018,
-            126.9780,
-            -99.1332
+            -46.6333
         ],
 
         "Demand": [
             15000,
             12000,
             9800,
-            8500,
-            7200,
             13200,
             10400,
             9100,
             14200,
             21000,
             23500,
+            19400,
             14800,
             18200,
             22500,
             9600,
-            12000,
-            4300,
-            11100,
-            15400,
-            12400
+            12000
         ]
     })
 
-    st.subheader("📊 Global Geo KPIs")
+    # --------------------------------
+    # KPI Cards
+    # --------------------------------
 
-    g1, g2, g3, g4 = st.columns(4)
+    st.subheader("📊 Geo Analytics KPIs")
 
-    with g1:
+    k1, k2, k3 = st.columns(3)
+
+    with k1:
         st.metric(
             "Locations",
             len(geo_data)
         )
 
-    with g2:
+    with k2:
         st.metric(
             "Total Demand",
             f"{geo_data['Demand'].sum():,}"
         )
 
-    with g3:
-        st.metric(
-            "High Demand Regions",
-            len(
-                geo_data[
-                    geo_data["Demand"] > 15000
-                ]
-            )
-        )
-
-    with g4:
+    with k3:
         st.metric(
             "Average Demand",
             f"{geo_data['Demand'].mean():.0f}"
         )
 
+    # --------------------------------
+    # Create REAL Interactive Map
+    # --------------------------------
+
     st.subheader(
-        "🌎 Geo Analytics Filters"
+        "🗺️ Interactive Logistics Map"
     )
 
-    country_filter = st.multiselect(
-        "Select Countries",
-        options=geo_data["Country"].unique(),
-        default=geo_data["Country"].unique()
+    m = folium.Map(
+
+        location=[20, 0],
+
+        zoom_start=2,
+
+        tiles="OpenStreetMap"
     )
 
-    demand_filter = st.slider(
-        "Minimum Demand",
-        min_value=0,
-        max_value=int(
-            geo_data["Demand"].max()
-        ),
-        value=5000
-    )
+    # --------------------------------
+    # Add Heatmap Layer
+    # --------------------------------
 
-    filtered_geo = geo_data[
-        (geo_data["Country"].isin(country_filter))
-        &
-        (geo_data["Demand"] >= demand_filter)
+    heat_data = [
+
+        [
+            row["Latitude"],
+            row["Longitude"],
+            row["Demand"]
+        ]
+
+        for index, row in geo_data.iterrows()
     ]
 
-    st.subheader(
-        "🔥 Global Demand Density Heatmap"
+    HeatMap(
+        heat_data,
+        radius=25
+    ).add_to(m)
+
+    # --------------------------------
+    # Add City Markers
+    # --------------------------------
+
+    for _, row in geo_data.iterrows():
+
+        popup_text = f"""
+        <b>City:</b> {row['City']}<br>
+        <b>Country:</b> {row['Country']}<br>
+        <b>Demand:</b> {row['Demand']}
+        """
+
+        folium.CircleMarker(
+
+            location=[
+                row["Latitude"],
+                row["Longitude"]
+            ],
+
+            radius=row["Demand"] / 3000,
+
+            popup=popup_text,
+
+            color="red",
+
+            fill=True,
+
+            fill_color="red",
+
+            fill_opacity=0.7
+
+        ).add_to(m)
+
+    # --------------------------------
+    # Render Map
+    # --------------------------------
+
+    st_folium(
+        m,
+        width=1400,
+        height=750
     )
 
-    density_map = px.density_mapbox(
-        filtered_geo,
-        lat="Latitude",
-        lon="Longitude",
-        z="Demand",
-        radius=35,
-        zoom=1.3,
-        center=dict(
-            lat=20,
-            lon=0
-        ),
-        height=750,
-        mapbox_style="carto-positron",
-        color_continuous_scale="Turbo"
-    )
-
-    density_map.update_layout(
-        margin=dict(
-            l=0,
-            r=0,
-            t=40,
-            b=0
-        )
-    )
-
-    st.plotly_chart(
-        density_map,
-        use_container_width=True
-    )
-
-    st.subheader(
-        "📍 Interactive Logistics Demand Map"
-    )
-
-    city_map = px.scatter_mapbox(
-        filtered_geo,
-        lat="Latitude",
-        lon="Longitude",
-        hover_name="City",
-        hover_data={
-            "Country": True,
-            "Demand": True
-        },
-        size="Demand",
-        color="Demand",
-        size_max=35,
-        zoom=1.3,
-        height=800,
-        width=None,
-        color_continuous_scale="Turbo"
-    )
-
-    city_map.update_layout(
-        mapbox_style="open-street-map",
-        margin=dict(
-            l=0,
-            r=0,
-            t=40,
-            b=0
-        )
-    )
-
-    st.plotly_chart(
-        city_map,
-        use_container_width=True
-    )
+    # --------------------------------
+    # Demand Table
+    # --------------------------------
 
     st.subheader(
-        "🏆 Highest Demand Regions"
+        "📋 Demand Analytics Table"
     )
 
-    top_regions = filtered_geo.sort_values(
+    sorted_geo = geo_data.sort_values(
         by="Demand",
         ascending=False
     )
 
-    top_regions = top_regions.reset_index(
-        drop=True
-    )
-
     st.dataframe(
-        top_regions,
+        sorted_geo,
         use_container_width=True
     )
 
+    # --------------------------------
+    # Demand Chart
+    # --------------------------------
+
     st.subheader(
-        "📈 Global Demand Comparison"
+        "📈 Demand Comparison"
     )
 
-    demand_chart = px.bar(
-        top_regions,
+    fig_geo = px.bar(
+
+        sorted_geo,
+
         x="City",
+
         y="Demand",
+
         color="Demand",
+
         text="Demand",
+
         color_continuous_scale="Turbo",
-        title="Demand Distribution Across Global Cities"
-    )
 
-    demand_chart.update_layout(
-        height=600
+        title="Global Demand Distribution"
     )
 
     st.plotly_chart(
-        demand_chart,
+        fig_geo,
         use_container_width=True
     )
+ 
+
+    top_regions = sorted_geo.reset_index(drop=True)
 
     st.subheader(
-        "🌐 Country-Wise Demand Analysis"
-    )
-
-    country_analysis = filtered_geo.groupby(
-        "Country"
-    )["Demand"].sum().reset_index()
-
-    country_chart = px.pie(
-        country_analysis,
-        names="Country",
-        values="Demand",
-        hole=0.45,
-        title="Country Wise Demand Share"
-    )
-
-    st.plotly_chart(
-        country_chart,
-        use_container_width=True
-    )
-
-    st.subheader(
-        "🤖 AI Generated Geo Insights"
-    )
+    "🤖 AI Generated Geo Insights"
+)
 
     highest_city = top_regions.iloc[0]
     lowest_city = top_regions.iloc[-1]
