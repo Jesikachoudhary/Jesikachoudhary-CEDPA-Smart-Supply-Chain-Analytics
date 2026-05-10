@@ -4,13 +4,12 @@ import plotly.express as px
 import numpy as np
 
 from sklearn.linear_model import LinearRegression
-
 from app.ml_models.risk_prediction import train_risk_model
 
 
-# --------------------------------
-# Page Configuration
-# --------------------------------
+# =====================================================
+# PAGE CONFIG
+# =====================================================
 
 st.set_page_config(
     page_title="CEDPA Smart Supply Chain Analytics",
@@ -18,9 +17,9 @@ st.set_page_config(
     page_icon="📊"
 )
 
-# --------------------------------
-# Custom Styling
-# --------------------------------
+# =====================================================
+# CUSTOM CSS
+# =====================================================
 
 st.markdown(
     """
@@ -78,9 +77,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------
-# Hero Section
-# --------------------------------
+# =====================================================
+# HERO SECTION
+# =====================================================
 
 st.markdown(
     """
@@ -95,9 +94,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------
-# Sidebar Navigation
-# --------------------------------
+# =====================================================
+# SIDEBAR
+# =====================================================
 
 st.sidebar.title("📌 CEDPA Navigation")
 
@@ -118,9 +117,9 @@ uploaded_file = st.sidebar.file_uploader(
     type=["csv"]
 )
 
-# --------------------------------
-# Load Dataset
-# --------------------------------
+# =====================================================
+# LOAD DATA
+# =====================================================
 
 if uploaded_file is not None:
 
@@ -132,9 +131,9 @@ else:
         "app/data/sample_data/complete_dataset_large.csv"
     )
 
-# --------------------------------
-# KPI Dashboard
-# --------------------------------
+# =====================================================
+# KPI SECTION
+# =====================================================
 
 st.subheader("📈 Business KPI Dashboard")
 
@@ -191,9 +190,9 @@ with k3:
         unsafe_allow_html=True
     )
 
-# =========================================
-# Dashboard Overview
-# =========================================
+# =====================================================
+# DASHBOARD OVERVIEW
+# =====================================================
 
 if section == "Dashboard Overview":
 
@@ -208,68 +207,9 @@ if section == "Dashboard Overview":
 
     st.write(data.columns.tolist())
 
-    # --------------------------------
-    # Executive Insights
-    # --------------------------------
-
-    st.subheader("📊 Executive Business Insights")
-
-    monthly_columns = [
-        "jan", "feb", "mar", "apr",
-        "may", "jun", "jul", "aug",
-        "sep", "oct", "nov", "dec"
-    ]
-
-    monthly_totals = data[
-        monthly_columns
-    ].sum()
-
-    top_month = monthly_totals.idxmax()
-
-    top_value = monthly_totals.max()
-
-    avg_lead_time = data[
-        "lead-time"
-    ].mean()
-
-    low_stock = data[
-        data["quantity_on_hand"] < 1000
-    ]
-
-    high_backlog = data[
-        data["backlog"] > 0
-    ]
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-
-        st.info(
-            f"📈 Highest Demand Month: "
-            f"{top_month.upper()} "
-            f"({top_value:.0f} units)"
-        )
-
-        st.warning(
-            f"⚠️ Low Stock Products: "
-            f"{len(low_stock)}"
-        )
-
-    with c2:
-
-        st.success(
-            f"🚚 Average Lead Time: "
-            f"{avg_lead_time:.2f} days"
-        )
-
-        st.error(
-            f"📦 Products With Backlog: "
-            f"{len(high_backlog)}"
-        )
-
-# =========================================
-# AI Risk Prediction
-# =========================================
+# =====================================================
+# AI RISK PREDICTION
+# =====================================================
 
 elif section == "AI Risk Prediction":
 
@@ -277,17 +217,11 @@ elif section == "AI Risk Prediction":
         "🤖 AI Supply Chain Risk Prediction"
     )
 
-    with st.spinner("Training AI Model..."):
-
-        model, accuracy = train_risk_model(data)
+    model, accuracy = train_risk_model(data)
 
     st.success(
         f"Model Accuracy: {accuracy:.2f}"
     )
-
-    # --------------------------------
-    # Risk Distribution
-    # --------------------------------
 
     risk_counts = data[
         "risk_level"
@@ -314,58 +248,13 @@ elif section == "AI Risk Prediction":
         use_container_width=True
     )
 
-    # --------------------------------
-    # Feature Importance
-    # --------------------------------
-
-    st.subheader(
-        "📊 Feature Importance Analysis"
-    )
-
-    importance_df = pd.DataFrame({
-
-        "Feature": [
-            "jan", "feb", "mar", "apr",
-            "may", "jun", "jul", "aug",
-            "sep", "oct", "nov", "dec",
-            "lead-time",
-            "quantity_on_hand",
-            "backlog"
-        ],
-
-        "Importance":
-        model.feature_importances_
-    })
-
-    importance_df = importance_df.sort_values(
-        by="Importance",
-        ascending=False
-    )
-
-    fig_importance = px.bar(
-        importance_df,
-        x="Importance",
-        y="Feature",
-        orientation="h",
-        title="Feature Importance"
-    )
-
-    st.plotly_chart(
-        fig_importance,
-        use_container_width=True
-    )
-
-    # --------------------------------
-    # Manual Prediction
-    # --------------------------------
-
     st.subheader(
         "🔮 Predict Supply Chain Risk"
     )
 
-    c1, c2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with c1:
+    with col1:
 
         jan = st.number_input(
             "January Demand",
@@ -397,7 +286,7 @@ elif section == "AI Risk Prediction":
             value=2300
         )
 
-    with c2:
+    with col2:
 
         jul = st.number_input(
             "July Demand",
@@ -471,9 +360,9 @@ elif section == "AI Risk Prediction":
                 "✅ Low Supply Chain Risk"
             )
 
-# =========================================
-# Demand Analysis
-# =========================================
+# =====================================================
+# DEMAND ANALYSIS
+# =====================================================
 
 elif section == "Demand Analysis":
 
@@ -509,36 +398,9 @@ elif section == "Demand Analysis":
         use_container_width=True
     )
 
-    # --------------------------------
-    # Heatmap
-    # --------------------------------
-
-    st.subheader(
-        "🔥 Correlation Heatmap"
-    )
-
-    numeric_data = data.select_dtypes(
-        include=["int64", "float64"]
-    )
-
-    corr_matrix = numeric_data.corr()
-
-    fig_heatmap = px.imshow(
-        corr_matrix,
-        text_auto=True,
-        aspect="auto",
-        color_continuous_scale="Turbo",
-        title="Feature Correlation Heatmap"
-    )
-
-    st.plotly_chart(
-        fig_heatmap,
-        use_container_width=True
-    )
-
-# =========================================
-# Inventory Insights
-# =========================================
+# =====================================================
+# INVENTORY INSIGHTS
+# =====================================================
 
 elif section == "Inventory Insights":
 
@@ -573,9 +435,9 @@ elif section == "Inventory Insights":
         use_container_width=True
     )
 
-# =========================================
-# Demand Forecasting
-# =========================================
+# =====================================================
+# DEMAND FORECASTING
+# =====================================================
 
 elif section == "Demand Forecasting":
 
@@ -617,70 +479,9 @@ elif section == "Demand Forecasting":
         use_container_width=True
     )
 
-    # --------------------------------
-    # AI Forecasting
-    # --------------------------------
-
-    st.subheader(
-        "🤖 AI Demand Forecasting"
-    )
-
-    month_numbers = np.array(
-        range(1, 13)
-    ).reshape(-1, 1)
-
-    demand_values = monthly_avg.values
-
-    forecast_model = LinearRegression()
-
-    forecast_model.fit(
-        month_numbers,
-        demand_values
-    )
-
-    future_month = st.slider(
-        "Select Future Month",
-        13,
-        24,
-        15
-    )
-
-    future_prediction = forecast_model.predict(
-        [[future_month]]
-    )[0]
-
-    st.success(
-        f"Predicted Demand For "
-        f"Month {future_month}: "
-        f"{future_prediction:.2f}"
-    )
-
-    future_df = pd.DataFrame({
-        "Month":
-        list(range(1, 13))
-        + [future_month],
-
-        "Demand":
-        list(demand_values)
-        + [future_prediction]
-    })
-
-    fig_future = px.line(
-        future_df,
-        x="Month",
-        y="Demand",
-        markers=True,
-        title="AI Forecasted Demand Trend"
-    )
-
-    st.plotly_chart(
-        fig_future,
-        use_container_width=True
-    )
-
-# =========================================
-# Geo Analytics
-# =========================================
+# =====================================================
+# GEO ANALYTICS
+# =====================================================
 
 elif section == "Geo Analytics":
 
@@ -766,114 +567,39 @@ elif section == "Geo Analytics":
         ]
     })
 
-    # --------------------------------
-    # Geo KPIs
-    # --------------------------------
-
-    g1, g2, g3, g4 = st.columns(4)
-
-    with g1:
-        st.metric(
-            "Total Locations",
-            len(geo_data)
-        )
-
-    with g2:
-        st.metric(
-            "Total Demand",
-            f"{geo_data['Demand'].sum():,}"
-        )
-
-    with g3:
-        st.metric(
-            "High Demand Areas",
-            len(
-                geo_data[
-                    geo_data["Demand"] > 15000
-                ]
-            )
-        )
-
-    with g4:
-        st.metric(
-            "Average Demand",
-            f"{geo_data['Demand'].mean():.0f}"
-        )
-
-    # --------------------------------
-    # Country Filter
-    # --------------------------------
-
-    country_filter = st.multiselect(
-        "🌎 Filter By Country",
-        options=geo_data["Country"].unique(),
-        default=geo_data["Country"].unique()
-    )
-
-    filtered_geo = geo_data[
-        geo_data["Country"].isin(
-            country_filter
-        )
-    ]
-
-    # --------------------------------
-    # Interactive World Map
-    # --------------------------------
-
     st.subheader(
-        "🗺️ Interactive Global Demand Map"
+        "🗺️ Interactive Supply Chain Demand Map"
     )
 
-    fig_map = px.scatter_geo(
+    fig_map = px.scatter_mapbox(
 
-        filtered_geo,
+        geo_data,
 
         lat="Latitude",
+
         lon="Longitude",
 
         hover_name="City",
 
         hover_data={
             "Country": True,
-            "Demand": True,
-            "Latitude": False,
-            "Longitude": False
+            "Demand": True
         },
 
         size="Demand",
 
         color="Demand",
 
-        projection="natural earth",
+        color_continuous_scale="Turbo",
 
-        title="Global Supply Chain Demand Distribution",
+        zoom=1.2,
 
-        color_continuous_scale="Turbo"
-    )
-
-    fig_map.update_traces(
-        marker=dict(
-            line=dict(
-                width=1,
-                color="white"
-            ),
-            sizemode="area"
-        )
+        height=750
     )
 
     fig_map.update_layout(
 
-        height=700,
-
-        geo=dict(
-            showland=True,
-            landcolor="rgb(240,240,240)",
-            showcountries=True,
-            countrycolor="gray",
-            showocean=True,
-            oceancolor="LightBlue",
-            projection_scale=1.1
-        ),
+        mapbox_style="open-street-map",
 
         margin=dict(
             l=0,
@@ -888,60 +614,18 @@ elif section == "Geo Analytics":
         use_container_width=True
     )
 
-    # --------------------------------
-    # Location Table
-    # --------------------------------
-
     st.subheader(
-        "📋 Location Demand Overview"
-    )
-
-    demand_table = filtered_geo.sort_values(
-        by="Demand",
-        ascending=False
+        "📋 Location Demand Details"
     )
 
     st.dataframe(
-        demand_table,
+        geo_data,
         use_container_width=True
     )
 
-    # --------------------------------
-    # Demand Comparison Chart
-    # --------------------------------
-
-    st.subheader(
-        "📈 Demand By Location"
-    )
-
-    fig_bar = px.bar(
-
-        demand_table,
-
-        x="City",
-        y="Demand",
-
-        color="Demand",
-
-        text="Demand",
-
-        title="Demand Comparison Across Locations",
-
-        color_continuous_scale="Turbo"
-    )
-
-    fig_bar.update_layout(
-        height=500
-    )
-
-    st.plotly_chart(
-        fig_bar,
-        use_container_width=True
-    )
-
-# --------------------------------
-# Footer
-# --------------------------------
+# =====================================================
+# FOOTER
+# =====================================================
 
 st.markdown("---")
 
