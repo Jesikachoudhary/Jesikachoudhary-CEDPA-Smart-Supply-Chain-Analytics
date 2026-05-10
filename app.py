@@ -106,7 +106,8 @@ section = st.sidebar.radio(
         "AI Risk Prediction",
         "Demand Analysis",
         "Inventory Insights",
-        "Demand Forecasting"
+        "Demand Forecasting",
+        "Geo Analytics"
     ]
 )
 
@@ -491,7 +492,7 @@ elif section == "Demand Forecasting":
         f"{forecast_value:.2f}"
     )
 
-        # --------------------------------
+    # --------------------------------
     # ML Forecast Prediction
     # --------------------------------
 
@@ -557,3 +558,97 @@ elif section == "Demand Forecasting":
         file_name="forecast_report.csv",
         mime="text/csv"
     )
+
+# --------------------------------
+# Geo Analytics
+# --------------------------------
+
+elif section == "Geo Analytics":
+
+    st.subheader("🌍 India Supply Chain Geo Analytics")
+
+    geo_data = pd.DataFrame({
+        "City": [
+            "Delhi",
+            "Mumbai",
+            "Bangalore",
+            "Chennai",
+            "Hyderabad",
+            "Kolkata",
+            "Pune"
+        ],
+
+        "Latitude": [
+            28.6139,
+            19.0760,
+            12.9716,
+            13.0827,
+            17.3850,
+            22.5726,
+            18.5204
+        ],
+
+        "Longitude": [
+            77.2090,
+            72.8777,
+            77.5946,
+            80.2707,
+            78.4867,
+            88.3639,
+            73.8567
+        ],
+
+        "Demand": [
+            5000,
+            7000,
+            6500,
+            4000,
+            5500,
+            3500,
+            4800
+        ]
+    })
+
+    fig_map = px.scatter_mapbox(
+        geo_data,
+        lat="Latitude",
+        lon="Longitude",
+        size="Demand",
+        color="Demand",
+        hover_name="City",
+        hover_data=["Demand"],
+        zoom=3.8,
+        height=600,
+        title="Supply Chain Demand Across India"
+    )
+
+    fig_map.update_layout(
+        mapbox_style="carto-darkmatter"
+    )
+
+    st.plotly_chart(
+        fig_map,
+        use_container_width=True
+    )
+
+    st.dataframe(
+        geo_data,
+        use_container_width=True
+    )
+
+    # --------------------------------
+# Footer
+# --------------------------------
+
+st.markdown("---")
+
+st.markdown(
+    """
+    <center>
+    <h4 style='color:gray;'>
+    Developed by Jesika Choudhary • AI Powered Supply Chain Analytics
+    </h4>
+    </center>
+    """,
+    unsafe_allow_html=True
+)
