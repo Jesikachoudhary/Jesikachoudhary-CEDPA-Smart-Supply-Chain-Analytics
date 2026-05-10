@@ -6,9 +6,8 @@ import folium
 from streamlit_folium import st_folium
 from folium.plugins import HeatMap
 
-from sklearn.linear_model import LinearRegression
-from app.ml_models.risk_prediction import train_risk_model
 
+from app.ml_models.risk_prediction import train_risk_model
 
 # =====================================================
 # PAGE CONFIG
@@ -19,6 +18,146 @@ st.set_page_config(
     layout="wide",
     page_icon="📊"
 )
+
+
+st.markdown("""
+<style>
+
+/* Main Background */
+.stApp {
+    background-color: #030712;
+    color: white;
+}
+
+/* Remove Streamlit Header */
+header {
+    visibility: hidden;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        #0F172A,
+        #111827
+    );
+
+    border-right: 1px solid #1E293B;
+}
+
+/* Sidebar Text */
+section[data-testid="stSidebar"] * {
+    color: white;
+}
+            /* KPI Cards */
+[data-testid="metric-container"] {
+
+    background: linear-gradient(
+        135deg,
+        #16213E,
+        #1F4068
+    );
+
+    border: 1px solid #2A4D7A;
+
+    padding: 22px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0px 4px 20px rgba(0,0,0,0.4);
+
+    transition: 0.3s ease;
+}
+
+[data-testid="metric-container"]:hover {
+    transform: translateY(-5px);
+}
+
+/* Buttons */
+.stButton>button {
+
+    background: linear-gradient(
+        90deg,
+        #2563EB,
+        #1D4ED8
+    );
+
+    color: white;
+
+    border-radius: 12px;
+            border: none;
+
+    padding: 12px 25px;
+
+    font-weight: bold;
+
+    transition: 0.3s ease;
+            
+        width: 100%;
+font-size: 16px;    
+}
+
+.stButton>button:hover {
+    transform: scale(1.03);
+}
+
+/* Charts */
+.plot-container {
+    border-radius: 20px;
+    overflow: hidden;
+}
+            /* Tables */
+[data-testid="stDataFrame"] {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Title */
+.main-title {
+
+    font-size: 68px;
+
+    font-weight: 800;
+
+    background: linear-gradient(
+        90deg,
+        #FFFFFF,
+            #60A5FA
+    );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    margin-bottom: 10px;
+}
+
+/* Subtitle */
+.subtitle {
+
+    color: #94A3B8;
+
+    font-size: 26px;
+
+    margin-bottom: 40px;
+            }
+
+/* Section Headers */
+.section-header {
+
+    font-size: 38px;
+
+    font-weight: 700;
+
+    margin-top: 35px;
+
+    margin-bottom: 20px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 
 # =====================================================
 # CUSTOM CSS
@@ -44,29 +183,14 @@ st.markdown(
         background-color: #111827;
     }
 
-    .metric-card {
-        background: linear-gradient(135deg, #111827, #1e293b);
-        padding: 25px;
-        border-radius: 18px;
-        border: 1px solid #334155;
-        box-shadow: 0px 4px 20px rgba(0,0,0,0.4);
-    }
-
-    .metric-title {
-        color: #94a3b8;
-        font-size: 18px;
-    }
-
-    .metric-value {
-        color: white;
-        font-size: 38px;
-        font-weight: bold;
-    }
+    
 
     .hero-title {
-        font-size: 52px;
+        font-size: 64px;
+        line-height: 1.1;
         font-weight: 800;
         color: white;
+        animation: fadeIn 1s ease-in-out;
     }
 
     .hero-subtitle {
@@ -74,11 +198,35 @@ st.markdown(
         color: #94a3b8;
         margin-bottom: 30px;
     }
+    .block-container {
+    padding-top: 2rem;
+}
 
+    iframe {
+    border-radius: 20px;
+}
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+[data-testid="stDataFrame"] {
+    background-color: #111827;
+}
     </style>
+ 
+
     """,
     unsafe_allow_html=True
 )
+
 
 # =====================================================
 # HERO SECTION
@@ -102,6 +250,13 @@ st.markdown(
 # =====================================================
 
 st.sidebar.title("📌 CEDPA Navigation")
+st.sidebar.markdown("---")
+
+st.sidebar.success(
+    "🚀 AI Powered Analytics Platform"
+)
+
+st.sidebar.markdown("---")
 
 section = st.sidebar.radio(
     "Select Dashboard Section",
@@ -124,48 +279,70 @@ uploaded_file = st.sidebar.file_uploader(
 # =====================================================
 # LOAD DATA
 # =====================================================
+with st.spinner("Loading Supply Chain Analytics..."):
 
-if uploaded_file is not None:
+    if uploaded_file is not None:
 
-    data = pd.read_csv(uploaded_file)
+        data = pd.read_csv(uploaded_file)
 
-else:
+    else:
 
-    data = pd.read_csv(
-        "app/data/sample_data/complete_dataset_large.csv"
-    )
+        data = pd.read_csv(
+            "app/data/sample_data/complete_dataset_large.csv"
+        )
+
 
 # =====================================================
 # KPI SECTION
 # =====================================================
-st.subheader("📈 Business KPI Dashboard")
 
-k1, k2, k3 = st.columns(3)
+st.markdown(
+    "<div class='section-header'>📈 Business KPI Dashboard</div>",
+    unsafe_allow_html=True
+)
+
+k1, k2, k3, k4 = st.columns(4)
 
 with k1:
     st.metric(
-        label="Total Records",
-        value=len(data)
+        "Total Records",
+        f"{len(data):,}"
     )
 
 with k2:
     st.metric(
-        label="Total Columns",
-        value=len(data.columns)
+        "Total Columns",
+        len(data.columns)
     )
 
 with k3:
     st.metric(
-        label="System Status",
-        value="Active"
+        "Average Inventory",
+        f"{int(data['quantity_on_hand'].mean()):,}"
     )
 
-
+with k4:
+    st.metric(
+        "Avg Lead Time",
+        round(data['lead-time'].mean(), 2)
+    )
 # =====================================================
 # DASHBOARD OVERVIEW
 # =====================================================
 
 if section == "Dashboard Overview":
+    st.subheader("📋 Executive Summary")
+
+    st.info(
+    f"""
+    The platform currently monitors
+    {len(data):,} supply chain records
+    using AI-powered forecasting,
+    inventory optimization,
+    logistics analytics,
+    and predictive risk intelligence.
+    """
+)
 
     st.subheader("📦 Supply Chain Dataset")
 
@@ -210,7 +387,11 @@ elif section == "AI Risk Prediction":
             hole=0.5,
             title="Supply Chain Risk Distribution"
         )
-
+        fig_risk.update_layout(
+    paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
         st.plotly_chart(
             fig_risk,
             use_container_width=True
@@ -359,8 +540,13 @@ elif section == "Demand Analysis":
         y="Demand",
         markers=True,
         title="Monthly Demand Trend"
-    )
-
+       
+)
+    fig.update_layout(
+    paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
     st.plotly_chart(
         fig,
         use_container_width=True
@@ -381,8 +567,13 @@ elif section == "Inventory Insights":
         x="quantity_on_hand",
         nbins=20,
         title="Inventory Quantity Distribution"
+        
     )
-
+    fig2.update_layout(
+    paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
     st.plotly_chart(
         fig2,
         use_container_width=True
@@ -396,11 +587,17 @@ elif section == "Inventory Insights":
         data,
         y="lead-time",
         title="Lead Time Distribution"
+        
     )
-
+    fig3.update_layout(
+    paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
     st.plotly_chart(
         fig3,
         use_container_width=True
+
     )
 
 # =====================================================
@@ -440,8 +637,13 @@ elif section == "Demand Forecasting":
         y=["Average Demand", "Forecast"],
         markers=True,
         title="Demand Forecasting Analysis"
+       
     )
-
+    fig_forecast.update_layout(
+        paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
     st.plotly_chart(
         fig_forecast,
         use_container_width=True
@@ -578,7 +780,7 @@ elif section == "Geo Analytics":
     m = folium.Map(
         location=[20, 0],
         zoom_start=2,
-        tiles="OpenStreetMap"
+        tiles="CartoDB dark_matter"
     )
 
     heat_data = [
@@ -671,7 +873,11 @@ elif section == "Geo Analytics":
 
         title="Global Demand Distribution"
     )
-
+    fig_geo.update_layout(
+    paper_bgcolor="#030712",
+    plot_bgcolor="#030712",
+    font_color="white"
+)
     st.plotly_chart(
         fig_geo,
         use_container_width=True
