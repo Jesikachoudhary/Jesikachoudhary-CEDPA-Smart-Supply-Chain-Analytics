@@ -1,0 +1,539 @@
+"""
+CEDPA Theme v5.0  —  Professional clean design.
+Works correctly in both dark and light mode.
+No broken HTML, no invisible text, no excessive emoji.
+"""
+import streamlit as st
+
+# ── Palette ────────────────────────────────────────────────────────────
+ACCENT  = "#2F81F7"
+SUCCESS = "#3FB950"
+DANGER  = "#F85149"
+WARNING = "#D29922"
+ORANGE  = "#E8762C"
+CYAN    = "#39C5CF"
+BLUE    = "#2F81F7"
+INDIGO  = "#6E76D9"
+PURPLE  = "#8B5CF6"   # kept so old imports don't crash
+ROSE    = "#F85149"
+
+COLORS = {
+    "dark": {
+        "bg":      "#0D1117",
+        "surface": "#161B22",
+        "border":  "#30363D",
+        "text":    "#E6EDF3",
+        "muted":   "#8B949E",
+        "subtle":  "#21262D",
+        "grid":    "rgba(139,148,158,0.10)",
+        "plot_bg": "rgba(0,0,0,0)",
+        "card_hover_border": "#2F81F7",
+    },
+    "light": {
+        "bg":      "#F6F8FA",
+        "surface": "#FFFFFF",
+        "border":  "#D0D7DE",
+        "text":    "#24292F",
+        "muted":   "#57606A",
+        "subtle":  "#F6F8FA",
+        "grid":    "rgba(0,0,0,0.06)",
+        "plot_bg": "rgba(0,0,0,0)",
+        "card_hover_border": "#0969DA",
+    },
+}
+
+
+def _is_dark() -> bool:
+    return st.session_state.get("theme_mode", "dark") == "dark"
+
+
+def get_colors() -> dict:
+    return COLORS["dark"] if _is_dark() else COLORS["light"]
+
+
+def inject_css():
+    c    = get_colors()
+    dark = _is_dark()
+    acc  = "#2F81F7" if dark else "#0969DA"
+    ok   = "#3FB950" if dark else "#1A7F37"
+    err  = "#F85149" if dark else "#CF222E"
+    warn = "#D29922" if dark else "#9A6700"
+    orng = "#E8762C" if dark else "#C4600E"
+
+    st.markdown(f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── CSS custom properties (theme-aware, work in inline styles) ── */
+:root {{
+    --text:    {c["text"]};
+    --muted:   {c["muted"]};
+    --surface: {c["surface"]};
+    --border:  {c["border"]};
+    --bg:      {c["bg"]};
+    --subtle:  {c["subtle"]};
+}}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+html, body, [class*="css"] {{
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    background-color: {c["bg"]} !important;
+    color: {c["text"]} !important;
+}}
+h1,h2,h3,h4,h5,h6 {{
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: {c["text"]};
+}}
+
+/* ── App background ───────────────────────────────────────────── */
+[data-testid="stAppViewContainer"] {{
+    background-color: {c["bg"]} !important;
+}}
+[data-testid="stMain"] {{
+    background-color: {c["bg"]} !important;
+}}
+.main .block-container {{
+    padding-top: 1.5rem !important;
+    max-width: 1300px;
+    animation: fadeIn .25s ease;
+}}
+@keyframes fadeIn {{
+    from {{ opacity: 0; transform: translateY(8px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {{
+    background-color: {c["surface"]} !important;
+    border-right: 1px solid {c["border"]} !important;
+}}
+[data-testid="stSidebar"] * {{
+    color: {c["text"]} !important;
+}}
+[data-testid="stSidebarNav"] {{
+    display: none !important;
+}}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.card {{
+    background: {c["surface"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}}
+.card:hover {{
+    border-color: {c["card_hover_border"]};
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}}
+
+/* ── KPI card ─────────────────────────────────────────────────── */
+.kpi-card {{
+    background: {c["surface"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 18px 20px 14px;
+    transition: border-color .2s ease;
+}}
+.kpi-card:hover {{
+    border-color: {c["card_hover_border"]};
+}}
+.kpi-label {{
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: {c["muted"]};
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}}
+.kpi-value {{
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}}
+.kpi-badge {{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}}
+.kpi-badge.up   {{ color:{ok};   background:{'rgba(63,185,80,.14)' if dark else 'rgba(26,127,55,.10)'}; }}
+.kpi-badge.down {{ color:{err};  background:{'rgba(248,81,73,.14)' if dark else 'rgba(207,34,46,.10)'}; }}
+
+/* ── Section heading ──────────────────────────────────────────── */
+.section-heading {{
+    font-size: 1.0rem;
+    font-weight: 700;
+    color: {c["text"]};
+    margin: 0 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid {c["border"]};
+}}
+
+/* ── Chart sub-label ──────────────────────────────────────────── */
+.chart-label {{
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: {c["muted"]};
+    margin-bottom: 10px;
+}}
+
+/* ── Alert strip ──────────────────────────────────────────────── */
+.alert-strip {{
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    border-left: 4px solid transparent;
+    background: {c["subtle"]};
+}}
+
+/* ── Sidebar status card ──────────────────────────────────────── */
+.status-card {{
+    background: {c["subtle"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}}
+.status-dot {{
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: {ok};
+    border-radius: 50%;
+    margin-right: 7px;
+    animation: pulse 2.5s ease infinite;
+}}
+@keyframes pulse {{
+    0%, 100% {{ box-shadow: 0 0 0 0 {'rgba(63,185,80,.5)' if dark else 'rgba(26,127,55,.5)'}; }}
+    50%       {{ box-shadow: 0 0 0 7px rgba(63,185,80,0); }}
+}}
+
+/* ── Divider ──────────────────────────────────────────────────── */
+.section-divider {{
+    height: 1px;
+    background: {c["border"]};
+    border: none;
+    margin: 24px 0;
+}}
+
+/* ── Page header block ────────────────────────────────────────── */
+.page-header {{
+    padding: 4px 0 24px;
+    border-bottom: 1px solid {c["border"]};
+    margin-bottom: 24px;
+}}
+.page-header h1 {{
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: {c["text"]};
+}}
+.page-header p {{
+    font-size: 0.88rem;
+    color: {c["muted"]};
+    margin: 0;
+}}
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar {{ width: 5px; height: 5px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{
+    background: {c["border"]};
+    border-radius: 4px;
+}}
+::-webkit-scrollbar-thumb:hover {{
+    background: {acc};
+}}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.stButton > button {{
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: all .18s ease !important;
+}}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+[data-testid="stTabs"] [role="tab"] {{
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
+}}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+    color: {acc} !important;
+    border-bottom: 2px solid {acc} !important;
+}}
+
+/* ── Inputs ───────────────────────────────────────────────────── */
+[data-testid="stTextInput"] input {{
+    border-radius: 6px !important;
+    font-size: 0.88rem !important;
+    border: 1px solid {c["border"]} !important;
+    background: {c["surface"]} !important;
+    color: {c["text"]} !important;
+}}
+[data-testid="stTextInput"] input:focus {{
+    border-color: {acc} !important;
+    box-shadow: 0 0 0 3px {'rgba(47,129,247,.2)' if dark else 'rgba(9,105,218,.15)'} !important;
+}}
+
+/* ── Progress bar ─────────────────────────────────────────────── */
+[data-testid="stProgress"] > div > div {{
+    background: {acc} !important;
+    border-radius: 4px !important;
+}}
+
+/* ── Expander ─────────────────────────────────────────────────── */
+[data-testid="stExpander"] {{
+    border: 1px solid {c["border"]} !important;
+    border-radius: 8px !important;
+    background: {c["surface"]} !important;
+}}
+[data-testid="stExpander"] summary {{
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: {c["text"]} !important;
+}}
+
+/* ── DataFrame ────────────────────────────────────────────────── */
+[data-testid="stDataFrame"] {{
+    border-radius: 8px;
+    border: 1px solid {c["border"]};
+}}
+
+/* ── Selectbox / dropdown ─────────────────────────────────────── */
+[data-testid="stSelectbox"] > div > div {{
+    background: {c["surface"]} !important;
+    border: 1px solid {c["border"]} !important;
+    border-radius: 6px !important;
+    color: {c["text"]} !important;
+}}
+
+/* ── Alert / info boxes ───────────────────────────────────────── */
+[data-testid="stAlert"] {{
+    border-radius: 6px !important;
+    font-size: 0.88rem !important;
+}}
+
+/* ── Metric widget ────────────────────────────────────────────── */
+[data-testid="stMetric"] {{
+    background: {c["surface"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 14px 16px !important;
+}}
+[data-testid="stMetricLabel"] {{
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: {c["muted"]} !important;
+}}
+[data-testid="stMetricValue"] {{
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: {c["text"]} !important;
+}}
+
+/* ── Nav links ────────────────────────────────────────────────── */
+[data-testid="stSidebar"] [data-testid="stPageLink"] a,
+[data-testid="stSidebar"] a[data-testid="stPageLink"] {{
+    display: flex !important;
+    align-items: center !important;
+    padding: 7px 10px !important;
+    border-radius: 6px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: {c["muted"]} !important;
+    text-decoration: none !important;
+    transition: all .15s ease !important;
+    margin-bottom: 1px !important;
+}}
+[data-testid="stSidebar"] [data-testid="stPageLink"] a:hover,
+[data-testid="stSidebar"] a[data-testid="stPageLink"]:hover {{
+    background: {'rgba(47,129,247,.12)' if dark else 'rgba(9,105,218,.08)'} !important;
+    color: {acc} !important;
+}}
+
+/* ── Floating AI chat button ──────────────────────────────────── */
+.fab-chat {{
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 52px;
+    height: 52px;
+    background: {acc};
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px {'rgba(47,129,247,0.45)' if dark else 'rgba(9,105,218,0.35)'};
+    z-index: 99999;
+    text-decoration: none !important;
+    transition: transform .2s ease, box-shadow .2s ease;
+    border: none;
+}}
+.fab-chat:hover {{
+    transform: scale(1.10);
+    box-shadow: 0 8px 28px {'rgba(47,129,247,0.60)' if dark else 'rgba(9,105,218,0.50)'};
+}}
+.fab-chat svg {{
+    width: 22px;
+    height: 22px;
+    fill: #ffffff;
+    pointer-events: none;
+}}
+/* pad page bottom so content isn't hidden behind FAB */
+.main .block-container {{
+    padding-bottom: 90px !important;
+}}
+
+/* ── Legacy helpers ────────────────────────────────────────────── */
+.glass-card {{
+    background: {c["surface"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+}}
+.metric-value-large {{
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: {c["text"]};
+    letter-spacing: -0.03em;
+}}
+.metric-label-sub {{
+    font-size: 0.78rem;
+    color: {c["muted"]};
+    font-weight: 600;
+    margin-top: 4px;
+}}
+</style>""", unsafe_allow_html=True)
+
+
+def render_sidebar_brand():
+    """Render sidebar — theme toggle, brand, health stats, search, nav."""
+
+    # ── Theme toggle ──────────────────────────────────────────────────
+    if "theme_mode" not in st.session_state:
+        st.session_state["theme_mode"] = "dark"
+    toggled = st.sidebar.toggle(
+        "Light Mode",
+        value=(st.session_state["theme_mode"] == "light"),
+        key="theme_toggle_widget",
+    )
+    st.session_state["theme_mode"] = "light" if toggled else "dark"
+
+    # ── Brand ─────────────────────────────────────────────────────────
+    c = get_colors()
+    st.sidebar.markdown(
+        f'<div style="padding:10px 0 14px;border-bottom:1px solid {c["border"]};margin-bottom:14px">'
+        f'<div style="font-size:1.1rem;font-weight:700;color:{c["text"]}">'
+        f'CEDPA Platform</div>'
+        f'<div style="font-size:0.72rem;color:{ACCENT};font-weight:600;margin-top:2px">'
+        f'Smart Supply Chain Analytics</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── System health ─────────────────────────────────────────────────
+    rm         = st.session_state.get("risk_model")
+    acc        = f"{rm.metrics['accuracy']*100:.1f}%" if rm else "—"
+    roc        = f"{rm.metrics['roc_auc']:.3f}"       if rm else "—"
+    ts         = st.session_state.get("data_generated_at", "—")
+    alerts     = st.session_state.get("alerts", [])
+    crit       = sum(1 for a in alerts if a["priority"] == "Critical")
+    warn       = sum(1 for a in alerts if a["priority"] == "Warning")
+    using_real = st.session_state.get("using_real_data", False)
+    src_label  = "Real Data"  if using_real else "Synthetic"
+    src_color  = SUCCESS      if using_real else WARNING
+
+    st.sidebar.markdown(
+        f'<div class="status-card">'
+        f'<div style="font-size:0.78rem;font-weight:700;color:{c["text"]};margin-bottom:8px">'
+        f'<span class="status-dot"></span>System Online</div>'
+        f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;font-size:0.75rem;color:{c["muted"]}">'
+        f'<div>Accuracy<br><b style="color:{SUCCESS}">{acc}</b></div>'
+        f'<div>ROC-AUC<br><b style="color:{ACCENT}">{roc}</b></div>'
+        f'<div>Critical<br><b style="color:{DANGER}">{crit}</b></div>'
+        f'<div>Warning<br><b style="color:{WARNING}">{warn}</b></div>'
+        f'<div style="grid-column:1/-1">Data: <b style="color:{src_color}">{src_label}</b>'
+        f'<span style="color:{c["muted"]};margin-left:6px;font-size:0.70rem">{ts}</span></div>'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Search ────────────────────────────────────────────────────────
+    q = st.sidebar.text_input(
+        "Search suppliers / SKUs / alerts",
+        key="global_search_q",
+        placeholder="Type a city, SKU, supplier…",
+    )
+    if q:
+        _show_search_results(q)
+
+    # ── Auto-refresh ──────────────────────────────────────────────────
+    refresh = st.sidebar.selectbox(
+        "Auto-refresh",
+        ["Off", "30 s", "60 s", "120 s"],
+        index=0,
+        key="auto_refresh_sel",
+    )
+    if refresh != "Off":
+        secs = int(refresh.split()[0])
+        st.markdown(
+            f"<meta http-equiv='refresh' content='{secs}'>",
+            unsafe_allow_html=True,
+        )
+
+    # ── Navigation ────────────────────────────────────────────────────
+    st.sidebar.markdown(
+        f'<div style="font-size:0.70rem;font-weight:700;color:{c["muted"]};'
+        f'letter-spacing:0.08em;text-transform:uppercase;margin:12px 0 6px;'
+        f'padding-left:2px">Navigation</div>',
+        unsafe_allow_html=True,
+    )
+    NAV = [
+        ("app.py",                       "Dashboard"),
+        ("pages/1_Risk_Analysis.py",      "Risk Analysis"),
+        ("pages/2_Demand_Forecast.py",    "Demand Forecast"),
+        ("pages/3_Geo_Map.py",            "Geographic Map"),
+        ("pages/4_Scenario_Simulator.py", "Scenario Simulator"),
+        ("pages/5_Alerts.py",             "Live Alerts"),
+        ("pages/6_AI_Assistant.py",       "AI Assistant"),
+        ("pages/7_Network_Graph.py",      "Network Graph"),
+        ("pages/8_Advanced_Analytics.py", "Advanced Analytics"),
+        ("pages/9_Optimization.py",       "LP Optimization"),
+        ("pages/10_Audit_Log.py",         "Audit Log"),
+        ("pages/11_Real_Data_Loader.py",  "Real Data Loader"),
+    ]
+    for path, label in NAV:
+        st.sidebar.page_link(path, label=label)
+
+
+def _show_search_results(query: str):
+    import pandas as pd
+    q = query.lower()
+    results = []
+    for _, r in st.session_state.get("suppliers_df", pd.DataFrame()).iterrows():
+        if q in f"{r.get('supplier_id','')} {r.get('supplier_name','')} {r.get('city','')}".lower():
+            results.append(f"**{r['supplier_id']}** — {r['supplier_name']} ({r['city']})")
+    for _, r in st.session_state.get("skus_df", pd.DataFrame()).iterrows():
+        if q in f"{r.get('sku_id','')} {r.get('sku_name','')} {r.get('category','')}".lower():
+            results.append(f"**{r['sku_id']}** — {r['sku_name']} ({r['category']})")
+    for a in st.session_state.get("alerts", []):
+        if q in f"{a.get('id','')} {a.get('city','')} {a.get('sku_affected','')}".lower():
+            results.append(f"**{a['id']}** — {a['title']}")
+    if results:
+        for r in results[:8]:
+            st.sidebar.markdown(r)
+    else:
+        st.sidebar.caption("No matches found.")

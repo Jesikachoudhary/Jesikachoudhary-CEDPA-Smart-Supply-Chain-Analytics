@@ -1,0 +1,495 @@
+"""
+CEDPA Shared Theme — v4.0
+Fixes: larger readable text · no all-caps labels · purple removed ·
+vibrant orange + electric-blue palette · bolder section headers.
+"""
+import streamlit as st
+
+# ─── Colour Palette ───────────────────────────────────────────────────
+COLORS = {
+    "dark": {
+        "bg":               "#0A0F1E",
+        "surface":          "rgba(22,32,54,0.70)",
+        "surface2":         "rgba(10,15,30,0.85)",
+        "border":           "rgba(255,255,255,0.09)",
+        "border_accent":    "rgba(56,189,248,0.40)",
+        "text":             "#F0F6FF",
+        "muted":            "#8DA4C0",
+        "muted2":           "#506480",
+        "card_hover_border":"rgba(56,189,248,0.55)",
+        "grid":             "rgba(200,220,255,0.06)",
+        "plot_bg":          "rgba(0,0,0,0)",
+    },
+    "light": {
+        "bg":               "#EEF2FA",
+        "surface":          "rgba(255,255,255,0.85)",
+        "surface2":         "rgba(244,248,255,0.92)",
+        "border":           "rgba(0,0,0,0.09)",
+        "border_accent":    "rgba(2,132,199,0.38)",
+        "text":             "#0D1B2A",
+        "muted":            "#4A6080",
+        "muted2":           "#94A3B8",
+        "card_hover_border":"rgba(2,132,199,0.45)",
+        "grid":             "rgba(0,0,0,0.07)",
+        "plot_bg":          "rgba(0,0,0,0)",
+    },
+}
+
+# ── Accent colours (NO purple) ─────────────────────────────────────────
+ACCENT  = "#38BDF8"   # Sky Blue
+SUCCESS = "#10B981"   # Emerald
+DANGER  = "#F43F5E"   # Rose Red
+WARNING = "#F59E0B"   # Amber
+ORANGE  = "#F97316"   # Vivid Orange  ← replaces purple everywhere
+CYAN    = "#06B6D4"   # Cyan
+BLUE    = "#3B82F6"   # Electric Blue
+ROSE    = "#FB7185"   # Soft Rose
+INDIGO  = "#6366F1"   # Indigo (kept for gradient only)
+
+
+def _is_dark() -> bool:
+    return st.session_state.get("theme_mode", "dark") == "dark"
+
+
+def get_colors() -> dict:
+    return COLORS["dark"] if _is_dark() else COLORS["light"]
+
+
+def inject_css():
+    """Inject the full premium CSS block — call once at the top of every page."""
+    c    = get_colors()
+    dark = _is_dark()
+
+    bg_grad = (
+        "linear-gradient(135deg,#0A0F1E 0%,#0D1535 45%,#0A1428 75%,#0A0F1E 100%)"
+        if dark else
+        "linear-gradient(135deg,#EEF2FA 0%,#F0F5FF 50%,#EAF0FF 100%)"
+    )
+
+    st.markdown(f"""
+<style>
+/* ── Fonts ─────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after {{ box-sizing: border-box; }}
+html, body, [class*="css"] {{
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+}}
+h1,h2,h3,h4,h5,h6 {{
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: {c["text"]};
+}}
+
+/* ── Animated background ───────────────────────────────────────── */
+[data-testid="stAppViewContainer"] {{
+    background: {bg_grad};
+    background-size: 400% 400%;
+    animation: bgPulse 18s ease infinite;
+    min-height: 100vh;
+}}
+@keyframes bgPulse {{
+    0%, 100% {{ background-position: 0% 50%; }}
+    50%       {{ background-position: 100% 50%; }}
+}}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {{
+    background: {'rgba(6,10,22,0.97)' if dark else 'rgba(245,249,255,0.97)'} !important;
+    border-right: 1px solid {c["border"]} !important;
+    backdrop-filter: blur(24px) !important;
+}}
+
+/* ── Glass card ────────────────────────────────────────────────── */
+.glass-card {{
+    background: {c["surface"]};
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid {c["border"]};
+    border-radius: 18px;
+    padding: 24px 26px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .30s cubic-bezier(.4,0,.2,1),
+                border-color .30s ease,
+                box-shadow .30s ease;
+}}
+.glass-card::before {{
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent, rgba(56,189,248,.5), transparent);
+}}
+.glass-card:hover {{
+    transform: translateY(-5px);
+    border-color: {c["card_hover_border"]};
+    box-shadow: 0 24px 56px rgba(0,0,0,.32),
+                0 0 0 1px rgba(56,189,248,.14);
+}}
+
+/* ── KPI text — LARGER, proper case ───────────────────────────── */
+.kpi-label {{
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: {c["muted"]};
+    margin-bottom: 8px;
+    letter-spacing: 0.01em;
+}}
+.kpi-number {{
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10px;
+    letter-spacing: -0.04em;
+}}
+.kpi-pill {{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}}
+.kpi-pill.up   {{ color:#34D399; background:rgba(52,211,153,.14); }}
+.kpi-pill.down {{ color:#F87171; background:rgba(248,113,113,.14); }}
+
+/* ── Section heading ───────────────────────────────────────────── */
+.section-heading {{
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: {c["text"]};
+    margin: 0 0 18px 0;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}}
+
+/* ── Chart sub-label ───────────────────────────────────────────── */
+.chart-label {{
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: {c["muted"]};
+    margin-bottom: 12px;
+}}
+
+/* ── Hero badge ────────────────────────────────────────────────── */
+.hero-badge {{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(56,189,248,.10);
+    border: 1px solid rgba(56,189,248,.32);
+    border-radius: 24px;
+    padding: 6px 18px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #38BDF8;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    animation: fadeUp .5s ease-out;
+}}
+
+/* ── Sidebar credit ────────────────────────────────────────────── */
+.sidebar-credit {{
+    background: {'rgba(10,15,30,0.75)' if dark else 'rgba(240,246,255,0.85)'};
+    border: 1px solid {c["border"]};
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 12px;
+}}
+
+/* ── Status dot ────────────────────────────────────────────────── */
+.status-dot {{
+    height: 9px; width: 9px;
+    background: #34D399;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    animation: dotPulse 2.4s ease infinite;
+}}
+@keyframes dotPulse {{
+    0%   {{ box-shadow: 0 0 0 0   rgba(52,211,153,.7); }}
+    60%  {{ box-shadow: 0 0 0 9px rgba(52,211,153,0);  }}
+    100% {{ box-shadow: 0 0 0 0   rgba(52,211,153,0);  }}
+}}
+
+/* ── Divider ───────────────────────────────────────────────────── */
+.section-divider {{
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%, rgba(56,189,248,.38) 40%,
+        rgba(249,115,22,.25) 70%, transparent 100%);
+    border: none;
+    margin: 32px 0;
+}}
+
+/* ── Alert card ────────────────────────────────────────────────── */
+.alert-card {{
+    background: {c["surface"]};
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    border: 1px solid {c["border"]};
+    transition: transform .22s ease, box-shadow .22s ease;
+    position: relative; overflow: hidden;
+}}
+.alert-card:hover {{
+    transform: translateX(5px);
+    box-shadow: 0 10px 28px rgba(0,0,0,.22);
+}}
+
+/* ── Page fade-in ──────────────────────────────────────────────── */
+@keyframes fadeUp {{
+    from {{ opacity:0; transform:translateY(14px); }}
+    to   {{ opacity:1; transform:translateY(0); }}
+}}
+.main .block-container {{
+    animation: fadeUp .40s cubic-bezier(.4,0,.2,1);
+    padding-top: 1.2rem !important;
+    max-width: 1400px;
+}}
+
+/* ── Metric large (sub-pages) ──────────────────────────────────── */
+.metric-value-large {{
+    font-size: 3rem; font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    color: {c["text"]}; line-height: 1.1;
+    letter-spacing: -0.04em;
+}}
+.metric-label-sub {{
+    font-size: 0.82rem; color: {c["muted"]};
+    font-weight: 600; margin-top: 4px;
+}}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar              {{ width: 5px; height: 5px; }}
+::-webkit-scrollbar-track        {{ background: transparent; }}
+::-webkit-scrollbar-thumb        {{ background: rgba(56,189,248,.28); border-radius: 4px; }}
+::-webkit-scrollbar-thumb:hover  {{ background: rgba(56,189,248,.50); }}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.stButton > button {{
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: all .22s ease !important;
+    padding: 8px 20px !important;
+}}
+.stButton > button[kind="primary"]:hover {{
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(56,189,248,.35) !important;
+}}
+
+/* ── Tabs ──────────────────────────────────────────────────────── */
+[data-testid="stTabs"] [role="tab"] {{
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
+    border-radius: 8px 8px 0 0;
+    transition: color .2s ease;
+}}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+    color: #38BDF8 !important;
+}}
+
+/* ── Inputs ────────────────────────────────────────────────────── */
+[data-testid="stTextInput"] input {{
+    border-radius: 10px !important;
+    font-size: 0.9rem !important;
+    border: 1px solid {c["border"]} !important;
+}}
+[data-testid="stTextInput"] input:focus {{
+    border-color: rgba(56,189,248,.55) !important;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.12) !important;
+}}
+
+/* ── Progress bar ──────────────────────────────────────────────── */
+[data-testid="stProgress"] > div > div {{
+    background: linear-gradient(90deg, #38BDF8 0%, #F97316 100%) !important;
+    border-radius: 6px !important;
+}}
+
+/* ── Expander ──────────────────────────────────────────────────── */
+[data-testid="stExpander"] {{
+    border: 1px solid {c["border"]} !important;
+    border-radius: 14px !important;
+    background: {c["surface"]} !important;
+}}
+[data-testid="stExpander"] summary {{
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+}}
+
+/* ── Hide default Streamlit page nav ("app" lowercase problem) ── */
+[data-testid="stSidebarNav"] {{
+    display: none !important;
+}}
+
+/* ── Sidebar nav links (st.page_link) ──────────────────────────── */
+[data-testid="stSidebar"] a[data-testid="stPageLink"] {{
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    color: {'#C8D8EE' if dark else '#334155'} !important;
+    text-decoration: none !important;
+    transition: all .18s ease !important;
+    margin-bottom: 2px !important;
+}}
+[data-testid="stSidebar"] a[data-testid="stPageLink"]:hover {{
+    background: rgba(56,189,248,.12) !important;
+    color: #38BDF8 !important;
+    padding-left: 16px !important;
+}}
+
+/* ── DataFrame ─────────────────────────────────────────────────── */
+[data-testid="stDataFrame"] {{
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid {c["border"]};
+}}
+
+/* ── Success / Error / Info boxes ──────────────────────────────── */
+[data-testid="stAlert"] {{
+    border-radius: 12px !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+}}
+</style>""", unsafe_allow_html=True)
+
+
+def render_sidebar_brand():
+    """Premium sidebar — theme toggle, brand, health grid, search, nav."""
+
+    # ── Theme toggle ──────────────────────────────────────────────────
+    if "theme_mode" not in st.session_state:
+        st.session_state["theme_mode"] = "dark"
+    toggled = st.sidebar.toggle(
+        "☀️  Light Mode",
+        value=(st.session_state["theme_mode"] == "light"),
+        key="theme_toggle_widget",
+    )
+    st.session_state["theme_mode"] = "light" if toggled else "dark"
+
+    # ── Brand ─────────────────────────────────────────────────────────
+    st.sidebar.markdown("""
+<div style="padding:6px 0 16px;border-bottom:1px solid rgba(255,255,255,0.07);
+     margin-bottom:16px">
+  <div style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;
+       color:#F0F6FF;letter-spacing:-0.02em;line-height:1.1">
+    ⚡ CEDPA
+  </div>
+  <div style="font-size:0.78rem;color:#38BDF8;font-weight:700;
+       letter-spacing:0.10em;text-transform:uppercase;margin-top:4px">
+    Smart Supply Chain Engine
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── System health ─────────────────────────────────────────────────
+    rm         = st.session_state.get("risk_model")
+    acc        = f"{rm.metrics['accuracy']*100:.1f}%" if rm else "—"
+    roc        = f"{rm.metrics['roc_auc']:.3f}"       if rm else "—"
+    ts         = st.session_state.get("data_generated_at", "—")
+    alerts     = st.session_state.get("alerts", [])
+    crit       = sum(1 for a in alerts if a["priority"] == "Critical")
+    warn       = sum(1 for a in alerts if a["priority"] == "Warning")
+    using_real = st.session_state.get("using_real_data", False)
+    src_label  = "Real Data" if using_real else "Synthetic"
+    src_color  = "#10B981"   if using_real else "#F97316"
+
+    st.sidebar.markdown(f"""
+<div class="sidebar-credit" style="border-left:3px solid #38BDF8;margin-bottom:16px">
+  <div style="display:flex;align-items:center;margin-bottom:10px">
+    <span class="status-dot"></span>
+    <span style="font-size:0.82rem;font-weight:700;color:#E8F0FF;
+         letter-spacing:0.04em">System Online</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;
+       gap:6px 12px;font-size:0.78rem;color:#8DA4C0">
+    <div>Accuracy<br><b style="color:#10B981;font-size:0.9rem">{acc}</b></div>
+    <div>ROC-AUC<br><b style="color:#38BDF8;font-size:0.9rem">{roc}</b></div>
+    <div>Critical<br><b style="color:#F43F5E;font-size:0.9rem">{crit}</b></div>
+    <div>Warning<br><b style="color:#F59E0B;font-size:0.9rem">{warn}</b></div>
+    <div style="grid-column:1/-1">
+      Data: <b style="color:{src_color}">{src_label}</b>
+      <span style="color:#506480;font-size:0.72rem;margin-left:6px">{ts}</span>
+    </div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Search ────────────────────────────────────────────────────────
+    q = st.sidebar.text_input("🔍  Search suppliers / SKUs / alerts",
+                               key="global_search_q",
+                               placeholder="Type a city, SKU, supplier…")
+    if q:
+        _show_search_results(q)
+
+    # ── Auto-refresh ──────────────────────────────────────────────────
+    refresh = st.sidebar.selectbox(
+        "⏱  Auto-refresh",
+        ["Off", "30 s", "60 s", "120 s"],
+        index=0, key="auto_refresh_sel",
+    )
+    if refresh != "Off":
+        secs = int(refresh.split()[0])
+        st.markdown(f"<meta http-equiv='refresh' content='{secs}'>",
+                    unsafe_allow_html=True)
+
+    # ── Navigation (always visible, grouped) ─────────────────────────
+    st.sidebar.markdown("""
+<div style="font-size:0.72rem;font-weight:700;color:#506480;
+     letter-spacing:0.10em;text-transform:uppercase;
+     margin:14px 0 8px;padding-left:4px">
+  Navigation
+</div>""", unsafe_allow_html=True)
+
+    NAV = [
+        ("app.py",                       "🏠", "Dashboard"),
+        ("pages/1_Risk_Analysis.py",      "🛡️", "Risk Analysis"),
+        ("pages/2_Demand_Forecast.py",    "📈", "Demand Forecast"),
+        ("pages/3_Geo_Map.py",            "🌐", "Geographic Map"),
+        ("pages/4_Scenario_Simulator.py", "⚙️", "Scenario Simulator"),
+        ("pages/5_Alerts.py",             "🚨", "Live Alerts"),
+        ("pages/6_AI_Assistant.py",       "🤖", "AI Assistant"),
+        ("pages/7_Network_Graph.py",      "🕸️", "Network Graph"),
+        ("pages/8_Advanced_Analytics.py", "🧪", "Advanced Analytics"),
+        ("pages/9_Optimization.py",       "🎯", "LP Optimization"),
+        ("pages/10_Audit_Log.py",         "📋", "Audit Log"),
+        ("pages/11_Real_Data_Loader.py",  "📂", "Real Data Loader"),
+    ]
+    for path, icon, label in NAV:
+        st.sidebar.page_link(path, label=f"{icon}  {label}")
+
+
+def _show_search_results(query: str):
+    import pandas as pd
+    q = query.lower()
+    results = []
+    for _, r in st.session_state.get("suppliers_df", pd.DataFrame()).iterrows():
+        if q in f"{r.get('supplier_id','')} {r.get('supplier_name','')} {r.get('city','')}".lower():
+            results.append(f"🏭 **{r['supplier_id']}** — {r['supplier_name']} ({r['city']})")
+    for _, r in st.session_state.get("skus_df", pd.DataFrame()).iterrows():
+        if q in f"{r.get('sku_id','')} {r.get('sku_name','')} {r.get('category','')}".lower():
+            results.append(f"📦 **{r['sku_id']}** — {r['sku_name']} ({r['category']})")
+    for a in st.session_state.get("alerts", []):
+        if q in f"{a.get('id','')} {a.get('city','')} {a.get('sku_affected','')}".lower():
+            results.append(f"🚨 **{a['id']}** — {a['title']}")
+    if results:
+        for r in results[:8]:
+            st.sidebar.markdown(r)
+    else:
+        st.sidebar.caption("No matches found.")

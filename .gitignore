@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+
+# Large dataset — upload manually via Real Data Loader after deployment
+data/DataCoSupplyChainDataset.csv
+
+# Streamlit local config
+.streamlit/secrets.toml

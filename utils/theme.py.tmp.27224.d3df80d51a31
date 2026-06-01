@@ -1,0 +1,480 @@
+"""
+CEDPA Shared Theme — v3.0 (Premium Redesign)
+Glassmorphic dark UI with animated gradient background,
+glowing cards, pulse animations, gradient typography,
+polished sidebar, and smooth page transitions.
+"""
+import streamlit as st
+
+# ─── Color Palette ────────────────────────────────────────────────────
+COLORS = {
+    "dark": {
+        "bg":               "#0F172A",
+        "surface":          "rgba(30,41,59,0.50)",
+        "surface2":         "rgba(15,23,42,0.70)",
+        "border":           "rgba(255,255,255,0.08)",
+        "border_accent":    "rgba(56,189,248,0.35)",
+        "text":             "#F1F5F9",
+        "muted":            "#94A3B8",
+        "muted2":           "#64748B",
+        "card_hover_border":"rgba(56,189,248,0.45)",
+        "grid":             "rgba(226,232,240,0.06)",
+        "plot_bg":          "rgba(0,0,0,0)",
+    },
+    "light": {
+        "bg":               "#F1F5F9",
+        "surface":          "rgba(255,255,255,0.80)",
+        "surface2":         "rgba(248,250,252,0.90)",
+        "border":           "rgba(0,0,0,0.08)",
+        "border_accent":    "rgba(2,132,199,0.35)",
+        "text":             "#0F172A",
+        "muted":            "#475569",
+        "muted2":           "#94A3B8",
+        "card_hover_border":"rgba(2,132,199,0.4)",
+        "grid":             "rgba(0,0,0,0.06)",
+        "plot_bg":          "rgba(0,0,0,0)",
+    },
+}
+
+ACCENT  = "#38BDF8"
+SUCCESS = "#10B981"
+DANGER  = "#EF4444"
+WARNING = "#F59E0B"
+PURPLE  = "#8B5CF6"
+CYAN    = "#06B6D4"
+ROSE    = "#F43F5E"
+INDIGO  = "#818CF8"
+
+
+def _is_dark() -> bool:
+    return st.session_state.get("theme_mode", "dark") == "dark"
+
+
+def get_colors() -> dict:
+    return COLORS["dark"] if _is_dark() else COLORS["light"]
+
+
+def inject_css():
+    """Inject the complete premium CSS block — call once at the top of every page."""
+    c   = get_colors()
+    dark = _is_dark()
+
+    # Background gradient colours
+    bg_grad = (
+        "linear-gradient(135deg,#0F172A 0%,#1A1035 40%,#0F1F35 70%,#0F172A 100%)"
+        if dark else
+        "linear-gradient(135deg,#EFF6FF 0%,#F1F5F9 50%,#EEF2FF 100%)"
+    )
+
+    st.markdown(f"""
+<style>
+/* ═══════════════════════════════════════════════
+   FONTS
+═══════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"] {{
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}}
+h1,h2,h3,h4,h5,h6 {{
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}}
+
+/* ═══════════════════════════════════════════════
+   BACKGROUND — animated gradient
+═══════════════════════════════════════════════ */
+[data-testid="stAppViewContainer"] {{
+  background: {bg_grad};
+  background-size: 300% 300%;
+  animation: bgShift 20s ease infinite;
+  min-height: 100vh;
+}}
+@keyframes bgShift {{
+  0%   {{ background-position: 0%   50%; }}
+  50%  {{ background-position: 100% 50%; }}
+  100% {{ background-position: 0%   50%; }}
+}}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+[data-testid="stSidebar"] {{
+  background: {'rgba(10,16,35,0.97)' if dark else 'rgba(248,250,252,0.97)'} !important;
+  border-right: 1px solid {c["border"]} !important;
+  backdrop-filter: blur(20px);
+}}
+[data-testid="stSidebar"] * {{ color: {'#E2E8F0' if dark else '#1E293B'}; }}
+
+/* ═══════════════════════════════════════════════
+   GLASSMORPHIC CARD
+═══════════════════════════════════════════════ */
+.glass-card {{
+  background: {c["surface"]};
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid {c["border"]};
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .28s cubic-bezier(.4,0,.2,1),
+              border-color .28s ease,
+              box-shadow .28s ease;
+}}
+/* Top shimmer line */
+.glass-card::before {{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,.45), transparent);
+  opacity: .7;
+}}
+.glass-card:hover {{
+  transform: translateY(-4px);
+  border-color: {c["card_hover_border"]};
+  box-shadow: 0 20px 48px rgba(0,0,0,.28),
+              0 0 0 1px rgba(56,189,248,.12),
+              inset 0 1px 0 rgba(255,255,255,.06);
+}}
+
+/* ═══════════════════════════════════════════════
+   KPI TYPOGRAPHY
+═══════════════════════════════════════════════ */
+.kpi-title {{
+  color: {c["muted"]};
+  font-size: .78rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: .09em;
+  margin-bottom: 6px;
+}}
+.kpi-value {{
+  color: {c["text"]};
+  font-size: 2.2rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+}}
+.kpi-delta {{
+  font-size: .8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}}
+.kpi-delta.up   {{ color:#4ADE80; background:rgba(74,222,128,.12); }}
+.kpi-delta.down {{ color:#F87171; background:rgba(248,113,113,.12); }}
+
+/* ═══════════════════════════════════════════════
+   GRADIENT TEXT UTILITY
+═══════════════════════════════════════════════ */
+.gradient-text {{
+  background: linear-gradient(135deg, #F8FAFC 20%, #38BDF8 60%, #818CF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}}
+
+/* ═══════════════════════════════════════════════
+   HERO BADGE
+═══════════════════════════════════════════════ */
+.hero-badge {{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56,189,248,.10);
+  border: 1px solid rgba(56,189,248,.30);
+  border-radius: 24px;
+  padding: 5px 16px;
+  font-size: .72rem;
+  color: #38BDF8;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  animation: fadeSlideIn .5s ease-out;
+}}
+
+/* ═══════════════════════════════════════════════
+   STATUS DOT — pulsing green
+═══════════════════════════════════════════════ */
+.status-dot {{
+  height: 9px; width: 9px;
+  background: #4ADE80;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: pulse 2.2s infinite;
+}}
+@keyframes pulse {{
+  0%   {{ box-shadow: 0 0 0 0 rgba(74,222,128,.6); }}
+  70%  {{ box-shadow: 0 0 0 8px rgba(74,222,128,0); }}
+  100% {{ box-shadow: 0 0 0 0 rgba(74,222,128,0); }}
+}}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR CREDIT CARD
+═══════════════════════════════════════════════ */
+.sidebar-credit {{
+  background: {'rgba(15,23,42,0.7)' if dark else 'rgba(241,245,249,0.8)'};
+  border: 1px solid {c["border"]};
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: .72rem;
+}}
+
+/* ═══════════════════════════════════════════════
+   GRADIENT SECTION DIVIDER
+═══════════════════════════════════════════════ */
+.section-divider {{
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,.4), transparent);
+  border: none;
+  margin: 28px 0;
+}}
+
+/* ═══════════════════════════════════════════════
+   ALERT CARDS
+═══════════════════════════════════════════════ */
+.alert-card {{
+  background: {c["surface"]};
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  border: 1px solid {c["border"]};
+  transition: transform .2s ease, box-shadow .2s ease;
+  position: relative; overflow: hidden;
+}}
+.alert-card:hover {{
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}}
+
+/* ═══════════════════════════════════════════════
+   PAGE TRANSITION
+═══════════════════════════════════════════════ */
+@keyframes fadeSlideIn {{
+  from {{ opacity: 0; transform: translateY(16px); }}
+  to   {{ opacity: 1; transform: translateY(0); }}
+}}
+.main .block-container {{
+  animation: fadeSlideIn .4s cubic-bezier(.4,0,.2,1);
+  padding-top: 1.5rem !important;
+}}
+
+/* ═══════════════════════════════════════════════
+   METRIC VALUE LARGE (sub-pages)
+═══════════════════════════════════════════════ */
+.metric-value-large {{
+  font-size: 2.8rem; font-weight: 800;
+  color: {c["text"]}; font-family: 'Outfit', sans-serif;
+  line-height: 1.1; letter-spacing: -0.04em;
+}}
+.metric-label-sub {{
+  font-size: .78rem; color: {c["muted"]};
+  text-transform: uppercase; font-weight: 600;
+  letter-spacing: .06em; margin-top: 4px;
+}}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════ */
+::-webkit-scrollbar              {{ width: 4px; height: 4px; }}
+::-webkit-scrollbar-track        {{ background: transparent; }}
+::-webkit-scrollbar-thumb        {{ background: rgba(56,189,248,.25); border-radius: 4px; }}
+::-webkit-scrollbar-thumb:hover  {{ background: rgba(56,189,248,.45); }}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.stButton > button {{
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  transition: all .22s ease !important;
+  letter-spacing: .01em !important;
+}}
+.stButton > button[kind="primary"]:hover {{
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(56,189,248,.35) !important;
+}}
+
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+[data-testid="stTabs"] [role="tab"] {{
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  transition: all .2s ease;
+}}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+  color: #38BDF8 !important;
+  border-bottom: 2px solid #38BDF8 !important;
+}}
+
+/* ═══════════════════════════════════════════════
+   INPUT FIELDS
+═══════════════════════════════════════════════ */
+[data-testid="stTextInput"] input,
+[data-testid="stSelectbox"] select {{
+  border-radius: 10px !important;
+  border: 1px solid {c["border"]} !important;
+  background: {c["surface2"]} !important;
+  transition: border-color .2s ease !important;
+}}
+[data-testid="stTextInput"] input:focus {{
+  border-color: rgba(56,189,248,.5) !important;
+  box-shadow: 0 0 0 3px rgba(56,189,248,.1) !important;
+}}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════ */
+[data-testid="stProgress"] > div > div {{
+  background: linear-gradient(90deg, #38BDF8, #818CF8) !important;
+  border-radius: 4px !important;
+}}
+
+/* ═══════════════════════════════════════════════
+   DATAFRAME / TABLE
+═══════════════════════════════════════════════ */
+[data-testid="stDataFrame"] {{
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid {c["border"]};
+}}
+
+/* ═══════════════════════════════════════════════
+   EXPANDER
+═══════════════════════════════════════════════ */
+[data-testid="stExpander"] {{
+  border: 1px solid {c["border"]} !important;
+  border-radius: 12px !important;
+  background: {c["surface"]} !important;
+}}
+</style>""", unsafe_allow_html=True)
+
+
+def render_sidebar_brand():
+    """Render the complete premium sidebar — theme toggle, brand, health, search, nav."""
+
+    # ── Theme toggle ────────────────────────────────────────────────
+    if "theme_mode" not in st.session_state:
+        st.session_state["theme_mode"] = "dark"
+    toggled = st.sidebar.toggle(
+        "☀️ Light Mode",
+        value=(st.session_state["theme_mode"] == "light"),
+        key="theme_toggle_widget",
+    )
+    st.session_state["theme_mode"] = "light" if toggled else "dark"
+
+    # ── Brand header ────────────────────────────────────────────────
+    st.sidebar.markdown("""
+<div style="padding:4px 0 14px 0;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:14px">
+  <div style="font-size:1.4rem;font-weight:800;color:#F8FAFC;font-family:'Outfit',sans-serif;
+       letter-spacing:-0.02em;line-height:1">
+    ⚡ CEDPA
+  </div>
+  <div style="font-size:.7rem;color:#38BDF8;font-weight:700;letter-spacing:.12em;
+       text-transform:uppercase;margin-top:3px">
+    Smart Supply Chain Engine
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── System health card ───────────────────────────────────────────
+    risk_model = st.session_state.get("risk_model")
+    acc_str    = f"{risk_model.metrics['accuracy']*100:.2f}%" if risk_model else "—"
+    roc_str    = f"{risk_model.metrics['roc_auc']:.3f}" if risk_model else "—"
+    ts         = st.session_state.get("data_generated_at", "—")
+    alerts     = st.session_state.get("alerts", [])
+    crit       = len([a for a in alerts if a["priority"] == "Critical"])
+    warn       = len([a for a in alerts if a["priority"] == "Warning"])
+    using_real = st.session_state.get("using_real_data", False)
+    data_src   = "Real Data 📊" if using_real else "Synthetic 🔬"
+
+    st.sidebar.markdown(f"""
+<div class="sidebar-credit" style="border-left:3px solid #38BDF8;margin-bottom:14px">
+  <div style="display:flex;align-items:center;margin-bottom:6px">
+    <span class="status-dot"></span>
+    <span style="font-size:.78rem;font-weight:700;color:#E2E8F0;letter-spacing:.04em">
+      SYSTEM ONLINE
+    </span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.68rem;color:#94A3B8">
+    <div>Accuracy: <b style="color:#10B981">{acc_str}</b></div>
+    <div>ROC-AUC: <b style="color:#38BDF8">{roc_str}</b></div>
+    <div>Critical: <b style="color:#EF4444">{crit}</b></div>
+    <div>Warning: <b style="color:#F59E0B">{warn}</b></div>
+    <div>Data: <b style="color:#E2E8F0">{data_src}</b></div>
+    <div style="font-size:.62rem;color:#64748B">{ts}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Global search ────────────────────────────────────────────────
+    q = st.sidebar.text_input("🔍 Search suppliers / SKUs / alerts", key="global_search_q")
+    if q:
+        _show_search_results(q)
+
+    # ── Auto-refresh ─────────────────────────────────────────────────
+    refresh = st.sidebar.selectbox(
+        "⏱ Auto-refresh", ["Off", "30 s", "60 s", "120 s"],
+        index=0, key="auto_refresh_sel",
+    )
+    if refresh != "Off":
+        secs = int(refresh.split()[0])
+        st.markdown(f"<meta http-equiv='refresh' content='{secs}'>",
+                    unsafe_allow_html=True)
+
+    # ── Quick navigation ──────────────────────────────────────────────
+    with st.sidebar.expander("📌 Quick Navigation", expanded=False):
+        pages = [
+            ("app.py",                          "🏠", "Executive Dashboard"),
+            ("pages/1_Risk_Analysis.py",         "🛡️", "Risk Analysis"),
+            ("pages/2_Demand_Forecast.py",       "📈", "Demand Forecast"),
+            ("pages/3_Geo_Map.py",               "🌐", "Geographic Map"),
+            ("pages/4_Scenario_Simulator.py",    "⚙️", "Scenario Simulator"),
+            ("pages/5_Alerts.py",                "🚨", "Live Alerts"),
+            ("pages/6_AI_Assistant.py",          "🤖", "AI Assistant"),
+            ("pages/7_Network_Graph.py",         "🕸️", "Network Graph"),
+            ("pages/8_Advanced_Analytics.py",    "🧪", "Advanced Analytics"),
+            ("pages/9_Optimization.py",          "🎯", "LP Optimization"),
+            ("pages/10_Audit_Log.py",            "📋", "Audit Log"),
+            ("pages/11_Real_Data_Loader.py",     "📂", "Real Data Loader"),
+        ]
+        for path, icon, label in pages:
+            st.page_link(path, label=f"{icon} {label}")
+
+
+def _show_search_results(query: str):
+    q = query.lower()
+    results = []
+    import pandas as pd
+    for _, row in st.session_state.get("suppliers_df", pd.DataFrame()).iterrows():
+        blob = f"{row.get('supplier_id','')} {row.get('supplier_name','')} {row.get('city','')}".lower()
+        if q in blob:
+            results.append(f"🏭 **{row['supplier_id']}** — {row['supplier_name']} ({row['city']})")
+    for _, row in st.session_state.get("skus_df", pd.DataFrame()).iterrows():
+        blob = f"{row.get('sku_id','')} {row.get('sku_name','')} {row.get('category','')}".lower()
+        if q in blob:
+            results.append(f"📦 **{row['sku_id']}** — {row['sku_name']} ({row['category']})")
+    for alt in st.session_state.get("alerts", []):
+        blob = f"{alt.get('id','')} {alt.get('city','')} {alt.get('sku_affected','')}".lower()
+        if q in blob:
+            results.append(f"🚨 **{alt['id']}** — {alt['title']}")
+    if results:
+        for r in results[:8]:
+            st.sidebar.markdown(r)
+    else:
+        st.sidebar.caption("No matches found.")
